@@ -1,6 +1,19 @@
-def main():
-    print("Hello from web-server!")
+from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 
+app = FastAPI(
+    docs_url="/docs",
+    redoc_url=None
+)
 
-if __name__ == "__main__":
-    main()
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
