@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, EmailStr
+
 
 class RegisterFormDTO(BaseModel):
-    name: str
-    email: str
-    password: str
+    name: str = Field(..., min_length=3, max_length=50)
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=64)

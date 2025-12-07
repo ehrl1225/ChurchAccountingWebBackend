@@ -1,0 +1,27 @@
+from fastapi import BackgroundTasks, HTTPException
+from sqlalchemy.orm import Session
+from fastapi import Depends
+
+from common.security.token import generate_verify_token
+from common.security.mailer import send_verify_email
+from domain.member.repository import MemberRepository
+from domain.member.entity import Member
+from common.env import settings
+
+
+class AuthService:
+
+    def __init__(self, member_repository: MemberRepository):
+        self.member_repository = member_repository
+
+    async def send_email_verification(self, email:str, tasks: BackgroundTasks):
+        token = generate_verify_token(email)
+        server_base_url = settings.profile_config.SERVER_BASE_URL
+        verify_url = f"{server_base_url}/auth/verify?token={token}"
+        tasks.add_task(send_verify_email, email, verify_url)
+
+    async def set_verified(self, db:Session, email:str):
+        member = await self.member_repository.get_member_by_email(db, email)
+        if member is None:
+            raise HTTPException(status_code=404, detail="Member not found")
+        await self.member_repository.modify_member_verification(db, member, True)

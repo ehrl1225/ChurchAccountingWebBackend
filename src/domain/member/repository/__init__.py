@@ -1,0 +1,1 @@
+from .member_repository import MemberRepository

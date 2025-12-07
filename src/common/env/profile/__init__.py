@@ -1,4 +1,4 @@
-from base_profile_config import BaseProfileConfig
+from .base_profile_config import BaseProfileConfig
 from typing import Type
 
 from common.env.profile.dev_profile_config import DevProfileConfig

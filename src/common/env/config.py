@@ -5,8 +5,12 @@ from common.env.profile import PROFILE_CLASS_MAP, BaseProfileConfig
 
 class Settings(BaseSettings):
     PROFILE: str
-    DATABASE_URL: str
-    profile_config: BaseProfileConfig
+    profile_config: BaseProfileConfig | None = None
+    SECRET_KEY: str
+    SMTP_PASS: str
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str
+
 
     model_config = SettingsConfigDict(
         env_file=".env",

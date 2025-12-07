@@ -6,11 +6,16 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.17.2",
-    "dependency-injector>=4.48.2",
-    "fastapi>=0.122.0",
+    "authlib>=1.6.5",
+    "dependency-injector==4.48.3",
+    "email-validator>=2.3.0",
+    "fastapi==0.124.0",
     "gunicorn>=23.0.0",
-    "psycopg>=3.2.13",
+    "itsdangerous>=2.2.0",
+    "passlib[bcrypt]>=1.7.4",
+    "psycopg==3.3.2",
     "pydantic-settings>=2.12.0",
+    "python-jose>=3.5.0",
     "sqlalchemy>=2.0.44",
     "uvicorn>=0.38.0",
 ]
