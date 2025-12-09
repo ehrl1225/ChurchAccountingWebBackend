@@ -7,6 +7,14 @@ from alembic import context
 from src.common.env import settings
 from src.common.database import Base
 from src.domain.member.entity import Member
+from src.domain.ledger.category.category.entity import Category
+from src.domain.ledger.category.item.entity import Item
+from src.domain.ledger.event.entity import Event
+from src.domain.ledger.receipt.entity import Receipt
+from src.domain.organization.organization.entity import Organization
+from src.domain.organization.organization_invitation.entity import OrganizationInvitation
+from src.domain.organization.organization_member.entity import OrganizationMember
+from src.domain.ledger.ledger_organization.entity import LedgerOrganization
 
 
 # this is the Alembic Config object, which provides

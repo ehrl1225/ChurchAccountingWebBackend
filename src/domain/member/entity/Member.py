@@ -1,11 +1,17 @@
 from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy.orm import Mapped, mapped_column
 
-from common.database import Base
+from common.database import BaseEntity
 
-class Member(Base):
+class Member(BaseEntity):
     __tablename__ = 'member'
-    id: int = Column(Integer, primary_key=True, autoincrement=True)
-    name: str = Column(String, unique=True, nullable=False)
-    email: str = Column(String, unique=True, nullable=False)
-    hashed_password: str = Column(String)
-    email_verified: bool = Column(Boolean)
+    type: Mapped[str] = mapped_column(String)
+    name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(64))
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    __mapper_args__ = {
+        "polymorphic_on": type,
+        "polymorphic_identity": "member",
+    }

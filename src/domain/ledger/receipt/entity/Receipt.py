@@ -1,0 +1,40 @@
+from common.database import BaseEntity, TxType
+from sqlalchemy import String, Date, Enum, Integer, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from datetime import date
+
+class Receipt(BaseEntity):
+    __tablename__ = "receipt"
+
+    receipt_image_url: Mapped[str] = mapped_column(String)
+    paper_date: Mapped[date] = mapped_column(Date)
+    actual_date: Mapped[date] = mapped_column(Date, nullable=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    tx_type: Mapped[TxType] = mapped_column(Enum(TxType, name="tx_type_enum"), nullable=False)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    category_id: Mapped[int] = mapped_column(ForeignKey("category.id"), nullable=False)
+    item_id: Mapped[int] = mapped_column(ForeignKey("item.id"), nullable=False)
+    event_id: Mapped[int] = mapped_column(ForeignKey("event.id"), nullable=True)
+    etc:Mapped[str] = mapped_column(String, nullable=True)
+    ledger_organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    category: Mapped["Category"] = relationship(
+        "Category",
+        back_populates="receipts"
+    )
+    item: Mapped["Item"] = relationship(
+        "Item",
+        back_populates="receipts"
+    )
+    event: Mapped["Event"] = relationship(
+        "Event",
+        back_populates="receipts"
+    )
+    ledger_organization: Mapped["Organization"] = relationship(
+        "LedgerOrganization",
+        back_populates="receipts"
+    )
+
+
+
