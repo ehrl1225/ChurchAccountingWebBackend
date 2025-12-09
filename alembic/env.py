@@ -4,17 +4,17 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-from src.common.env import settings
-from src.common.database import Base
-from src.domain.member.entity import Member
-from src.domain.ledger.category.category.entity import Category
-from src.domain.ledger.category.item.entity import Item
-from src.domain.ledger.event.entity import Event
-from src.domain.ledger.receipt.entity import Receipt
-from src.domain.organization.organization.entity import Organization
-from src.domain.organization.organization_invitation.entity import OrganizationInvitation
-from src.domain.organization.organization_member.entity import OrganizationMember
-from src.domain.ledger.ledger_organization.entity import LedgerOrganization
+from common.env import settings
+from common.database import Base
+from domain.member.entity import Member
+from domain.ledger.category.category.entity import Category
+from domain.ledger.category.item.entity import Item
+from domain.ledger.event.entity import Event
+from domain.ledger.receipt.entity import Receipt
+from domain.organization.organization.entity import Organization
+from domain.organization.organization_invitation.entity import OrganizationInvitation
+from domain.organization.organization_member.entity import OrganizationMember
+from domain.ledger.ledger_organization.entity import LedgerOrganization
 
 
 # this is the Alembic Config object, which provides
@@ -36,7 +36,7 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.profile_config.DATABASE_URL)
 
 
 def run_migrations_offline() -> None:
