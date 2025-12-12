@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 from common.env import settings
 from common.database import Base
-from domain.member.entity import Member
+from domain.member.entity import Member, RefreshToken
 from domain.ledger.category.category.entity import Category
 from domain.ledger.category.item.entity import Item
 from domain.ledger.event.entity import Event

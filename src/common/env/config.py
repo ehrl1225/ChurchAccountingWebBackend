@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     SMTP_PASS: str
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
+    SERVER_PEPPER: str
 
 
     model_config = SettingsConfigDict(
