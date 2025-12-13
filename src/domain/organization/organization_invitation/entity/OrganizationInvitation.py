@@ -7,13 +7,13 @@ class OrganizationInvitation(BaseEntity):
     __tablename__ = "organization_invitation"
 
     organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
-    organization_member_id: Mapped[int] = mapped_column(ForeignKey("member.id"), nullable=False)
+    member_id: Mapped[int] = mapped_column(ForeignKey("member.id"), nullable=False)
 
     organization: Mapped["Organization"] = relationship(
         "Organization",
         back_populates="organization_invitations"
     )
-    organization_member: Mapped["OrganizationMember"] = relationship(
-        "OrganizationMember",
+    member: Mapped["Member"] = relationship(
+        "Member",
         back_populates="organization_invitations"
     )

@@ -40,3 +40,11 @@ class MemberRepository:
         db.commit()
         db.refresh(member)
         return member
+
+    async def find_by_id(
+            self,
+            db: Session,
+            id: int
+    ):
+        member: Member = db.query(Member).get(id)
+        return member

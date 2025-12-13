@@ -16,7 +16,7 @@ class Receipt(BaseEntity):
     item_id: Mapped[int] = mapped_column(ForeignKey("item.id"), nullable=False)
     event_id: Mapped[int] = mapped_column(ForeignKey("event.id"), nullable=True)
     etc:Mapped[str] = mapped_column(String, nullable=True)
-    ledger_organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
+    organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
 
     category: Mapped["Category"] = relationship(
@@ -31,8 +31,8 @@ class Receipt(BaseEntity):
         "Event",
         back_populates="receipts"
     )
-    ledger_organization: Mapped["Organization"] = relationship(
-        "LedgerOrganization",
+    organization: Mapped["Organization"] = relationship(
+        "Organization",
         back_populates="receipts"
     )
 

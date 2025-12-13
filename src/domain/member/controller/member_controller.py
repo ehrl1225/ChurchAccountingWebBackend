@@ -58,7 +58,6 @@ async def verify_email(
     await auth_service.set_verified(db,subject)
 
 @router.get("/me")
-@inject
 async def me(
         request: Request,
         response:Response,

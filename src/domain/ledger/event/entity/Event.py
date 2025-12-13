@@ -12,11 +12,11 @@ class Event(BaseEntity):
     start_date: Mapped[date] = mapped_column(Date)
     end_date: Mapped[date] = mapped_column(Date)
     description: Mapped[str] = mapped_column(String)
-    ledger_organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
+    organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    ledger_organization: Mapped["LedgerOrganization"] = relationship(
-        "LedgerOrganization",
+    organization: Mapped["Organization"] = relationship(
+        "Organization",
         back_populates="events",
     )
     receipts: Mapped[list["Receipt"]] = relationship(

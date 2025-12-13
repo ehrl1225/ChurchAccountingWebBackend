@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from domain.member.controller import router as member_router
+from domain.organization.organization.controller import router as organization_router
 from common.dependency_injector import Container
 
 app = FastAPI(
@@ -21,6 +22,7 @@ app.add_middleware(
 )
 
 app.include_router(member_router)
+app.include_router(organization_router)
 
 container = Container()
 
