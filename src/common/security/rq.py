@@ -4,7 +4,7 @@ from fastapi import HTTPException, status, Request, Response
 from jose import JWTError
 from sqlalchemy.orm import Session
 
-from .jwt_util import decode_token, create_token, dict_to_member, member_to_dict, set_token
+from .jwt_util import decode_token, dict_to_member, member_to_dict, set_token
 from domain.member.entity import Member, RefreshToken
 from .member_DTO import MemberDTO
 from typing import Optional

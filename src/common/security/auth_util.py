@@ -12,7 +12,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return pbkdf2_sha256.verify(password, hashed_password)
 
 def hash_jwt_token(token: str) -> str:
-    return hmac.new(settings.SERVER_PEPPER, token.encode(), hashlib.sha256).hexdigest()
+    return hmac.new(settings.SERVER_PEPPER.encode(), token.encode(), hashlib.sha256).hexdigest()
 
 def verify_jwt_token(token: str, hashed_token:str) -> bool:
     return hashed_token == hash_jwt_token(token)

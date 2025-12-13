@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session
 
 from common.security.email_token import generate_verify_token
 from common.security.mailer import send_verify_email
+from common.security.token_DTO import TokenDTO
 from domain.member.repository import MemberRepository, RefreshTokenRepository
 from domain.member.entity import Member
 from common.env import settings
-from common.security.jwt_util import create_token, set_token
-from datetime import timedelta
+from common.security.jwt_util import set_token
+from common.security.auth_util import get_user_agent, get_client_ip
 
 
 class AuthService:
@@ -30,6 +31,9 @@ class AuthService:
 
     async def create_token(self, db:Session, member:Member, request:Request, response: Response):
         set_token(member,"access", response)
-        refresh_token = settings(member,"refresh", response)
+        refresh_token:TokenDTO = set_token(member,"refresh", response)
+        ip_address = get_client_ip(request)
+        user_agent = get_user_agent(request)
+        self.refresh_token_repository.create(db, member, refresh_token, ip_address, user_agent)
 
 

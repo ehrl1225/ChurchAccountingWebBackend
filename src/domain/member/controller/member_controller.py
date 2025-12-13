@@ -10,6 +10,7 @@ from domain.member.dto import RegisterFormDTO, LoginFormDTO
 from domain.member.service import MemberService
 from domain.member.service.auth_service import AuthService
 from domain.member.entity import Member
+from common.security.rq import get_current_user_from_cookie
 
 router = APIRouter(prefix="/member", tags=["member"])
 
@@ -24,10 +25,10 @@ async def register_member(
         auth_service: AuthService = Depends(Provide[Container.auth_service])
 ):
     email: str = str(registerForm.email)
-    if not member_service.check_email(db, email):
+    if await member_service.check_email(db, email):
         raise HTTPException(status_code=400, detail="Invalid email")
     await member_service.add_member(db, registerForm)
-    # await auth_service.send_email_verification(email,tasks)
+    await auth_service.send_email_verification(email,tasks)
 
 @router.post("/login")
 @inject
@@ -56,3 +57,11 @@ async def verify_email(
         raise HTTPException(status_code=400, detail="Invalid token")
     await auth_service.set_verified(db,subject)
 
+@router.get("/me")
+@inject
+async def me(
+        request: Request,
+        response:Response,
+        db:Session = Depends(get_db),
+):
+    return get_current_user_from_cookie(request,response, db)

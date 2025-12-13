@@ -7,7 +7,7 @@ from common.database import BaseEntity
 
 class RefreshToken(BaseEntity):
     __tablename__ = "refresh_token"
-    token_hash: Mapped[str] = mapped_column(String)
+    hashed_token: Mapped[str] = mapped_column(String)
     jti: Mapped[str] = mapped_column(String, unique=True)
     issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     expires_at: Mapped[datetime] = mapped_column(DateTime)
