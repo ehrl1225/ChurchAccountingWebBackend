@@ -20,7 +20,7 @@ class AuthService:
     async def send_email_verification(self, email:str, tasks: BackgroundTasks):
         token = generate_verify_token(email)
         server_base_url = settings.profile_config.SERVER_BASE_URL
-        verify_url = f"{server_base_url}/auth/verify?token={token}"
+        verify_url = f"{server_base_url}/member/verify?token={token}"
         tasks.add_task(send_verify_email, email, verify_url)
 
     async def set_verified(self, db:Session, email:str):

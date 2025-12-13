@@ -13,8 +13,7 @@ from domain.ledger.event.entity import Event
 from domain.ledger.receipt.entity import Receipt
 from domain.organization.organization.entity import Organization
 from domain.organization.organization_invitation.entity import OrganizationInvitation
-from domain.organization.organization_member.entity import OrganizationMember
-from domain.ledger.ledger_organization.entity import LedgerOrganization
+from domain.organization.joined_organization.entity import JoinedOrganization
 
 
 # this is the Alembic Config object, which provides

@@ -7,7 +7,7 @@ class Item(BaseEntity):
     __tablename__ = "item"
     name: Mapped[str] = mapped_column(String)
     category_id: Mapped[int] = mapped_column(ForeignKey("category.id"), nullable=False)
-    ledger_organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
+    organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
 
     category: Mapped["Category"] = relationship(
@@ -18,7 +18,7 @@ class Item(BaseEntity):
         "Receipt",
         back_populates="item"
     )
-    ledger_organization: Mapped["LedgerOrganization"] = relationship(
-        "LedgerOrganization",
+    organization: Mapped["Organization"] = relationship(
+        "Organization",
         back_populates="items",
     )

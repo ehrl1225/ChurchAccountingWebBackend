@@ -5,7 +5,6 @@ from common.database import BaseEntity
 
 class Member(BaseEntity):
     __tablename__ = 'member'
-    type: Mapped[str] = mapped_column(String)
     name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(64))
@@ -15,8 +14,11 @@ class Member(BaseEntity):
         "RefreshToken",
         back_populates="member"
     )
-
-    __mapper_args__ = {
-        "polymorphic_on": type,
-        "polymorphic_identity": "member",
-    }
+    organization_invitations: Mapped[list["OrganizationInvitation"]] = relationship(
+        "OrganizationInvitation",
+        back_populates="member",
+    )
+    joined_organization: Mapped[list["JoinedOrganization"]] = relationship(
+        "JoinedOrganization",
+        back_populates="member",
+    )

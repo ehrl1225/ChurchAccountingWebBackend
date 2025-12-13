@@ -6,7 +6,6 @@ from common.database import BaseEntity
 class Organization(BaseEntity):
     __tablename__ = "organization"
 
-    type: Mapped[str] = mapped_column(String)
     name: Mapped[str] = mapped_column(String)
     description: Mapped[str] = mapped_column(String)
     start_year: Mapped[int] = mapped_column(Integer)
@@ -16,8 +15,23 @@ class Organization(BaseEntity):
         "OrganizationInvitation",
         back_populates="organization",
     )
-
-    __mapper_args__ = {
-        "polymorphic_on": type,
-        "polymorphic_identity": "organization"
-    }
+    joined_organization: Mapped[list["JoinedOrganization"]] = relationship(
+        "JoinedOrganization",
+        back_populates="organization",
+    )
+    categories: Mapped[list["Category"]] = relationship(
+        "Category",
+        back_populates="organization"
+    )
+    items: Mapped[list["Item"]] = relationship(
+        "Item",
+        back_populates="organization"
+    )
+    events: Mapped[list["Event"]] = relationship(
+        "Event",
+        back_populates="organization"
+    )
+    receipts: Mapped[list["Receipt"]] = relationship(
+        "Receipt",
+        back_populates="organization"
+    )

@@ -7,7 +7,7 @@ class Category(BaseEntity):
     __tablename__ = "category"
     name: Mapped[str] = mapped_column(String, nullable=False)
     tx_type: Mapped[TxType] = mapped_column(Enum(TxType, name="tx_type_enum"), nullable=False)
-    ledger_organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
+    organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
 
     items: Mapped[list["Item"]] = relationship(
@@ -18,7 +18,7 @@ class Category(BaseEntity):
         "Receipt",
         back_populates="category",
     )
-    ledger_organization: Mapped["LedgerOrganization"] = relationship(
-        "LedgerOrganization",
+    organization: Mapped["Organization"] = relationship(
+        "Organization",
         back_populates="categories",
     )
