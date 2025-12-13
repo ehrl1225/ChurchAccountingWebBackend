@@ -26,3 +26,4 @@ def send_verify_email(to_email:str, verify_url:str):
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.starttls()
         server.login(SMTP_USER, settings.SMTP_PASS)
+        server.send_message(msg)

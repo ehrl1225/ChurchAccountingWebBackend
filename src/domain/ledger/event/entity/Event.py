@@ -17,5 +17,9 @@ class Event(BaseEntity):
 
     ledger_organization: Mapped["LedgerOrganization"] = relationship(
         "LedgerOrganization",
-        back_populates="items",
+        back_populates="events",
+    )
+    receipts: Mapped[list["Receipt"]] = relationship(
+        "Receipt",
+        back_populates="event",
     )

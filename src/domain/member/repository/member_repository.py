@@ -26,16 +26,16 @@ class MemberRepository:
         db.refresh(member)
         return member
 
-    async def get_member_by_email(self, db:Session, email:str) -> Optional[Type[Member]]:
-        member: Optional[Type[Member]]  = db.query(Member).filter_by(email=email).one_or_none()
+    async def get_member_by_email(self, db:Session, email:str) -> Optional[Member]:
+        member: Optional[Member]  = db.query(Member).filter_by(email=email).one_or_none()
         return member
 
     async def modify_member_verification(
             self,
             db: Session,
-            member: Type[Member],
+            member: Member,
             email_verified: bool
-    ) -> Type[Member]:
+    ) -> Member:
         member.email_verified = email_verified
         db.commit()
         db.refresh(member)
