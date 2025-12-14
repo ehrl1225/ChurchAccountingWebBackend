@@ -12,6 +12,6 @@ class OrganizationRepository:
             end_year=organization_create_dto.end_year,
         )
         db.add(organization)
-        db.commit()
+        db.flush()
         db.refresh(organization)
         return organization

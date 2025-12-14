@@ -22,6 +22,6 @@ class JoinedOrganizationRepository:
             member=member,
         )
         db.add(joined_organization)
-        db.commit()
+        db.flush()
         db.refresh(joined_organization)
         return joined_organization
