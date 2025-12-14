@@ -30,10 +30,16 @@ def get_current_user_from_cookie(
 ) -> MemberDTO:
     access_token = request.cookies.get("access_token")
     refresh_token = request.cookies.get("refresh_token")
+    if access_token is not None:
+        try:
+            decoded_access_token = decode_token(access_token)
+            return dict_to_member(decoded_access_token)
+        except JWTError:
+            pass
 
-    if access_token is None:
-        if refresh_token is None:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if refresh_token is None:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    try:
         decoded_refresh_token = decode_token(refresh_token)
         jti = decoded_refresh_token["jti"]
         if jti is None:
@@ -44,5 +50,5 @@ def get_current_user_from_cookie(
         member = db_token.member
         set_token(member,"access", response)
         return dict_to_member(decoded_refresh_token)
-    decoded_access_token = decode_token(access_token)
-    return dict_to_member(decoded_access_token)
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")

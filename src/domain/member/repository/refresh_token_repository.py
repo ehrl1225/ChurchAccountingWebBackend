@@ -26,5 +26,5 @@ class RefreshTokenRepository:
         db.refresh(refresh_token)
         return refresh_token
 
-    def find_refresh_token(self, db:Session, jti:str):
-        db.query(RefreshToken).filter(RefreshToken.jti == jti).one_or_none()
+    def find_refresh_token(self, db:Session, jti:str) -> Optional[RefreshToken]:
+        return db.query(RefreshToken).filter(RefreshToken.jti == jti).one_or_none()
