@@ -22,7 +22,7 @@ class MemberRepository:
             email_verified=False
         )
         db.add(member)
-        db.commit()
+        db.flush()
         db.refresh(member)
         return member
 
@@ -37,7 +37,7 @@ class MemberRepository:
             email_verified: bool
     ) -> Member:
         member.email_verified = email_verified
-        db.commit()
+        db.flush()
         db.refresh(member)
         return member
 

@@ -10,7 +10,7 @@ from domain.organization.joined_organization.repository import JoinedOrganizatio
 class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
         packages=["domain"],
-        modules=["main"]
+        modules=["main", "common.security.rq"]
     )
     member_repository: MemberRepository = providers.Singleton(MemberRepository)
     refresh_token_repository: RefreshTokenRepository = providers.Singleton(RefreshTokenRepository)

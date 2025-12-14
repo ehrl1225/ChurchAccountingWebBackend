@@ -1,13 +1,17 @@
 from datetime import timedelta
 
-from fastapi import HTTPException, status, Request, Response
+from dependency_injector.wiring import inject, Provide
+from fastapi import HTTPException, status, Request, Response, Depends
 from jose import JWTError
 from sqlalchemy.orm import Session
 
+from domain.member.repository import RefreshTokenRepository
 from .jwt_util import decode_token, dict_to_member, member_to_dict, set_token
 from domain.member.entity import Member, RefreshToken
 from .member_DTO import MemberDTO
 from typing import Optional
+
+from common.dependency_injector import Container
 
 
 def get_current_user(token: str) -> Optional[MemberDTO]:
@@ -17,7 +21,13 @@ def get_current_user(token: str) -> Optional[MemberDTO]:
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-def get_current_user_from_cookie(request: Request, response: Response, db:Session) -> MemberDTO:
+@inject
+def get_current_user_from_cookie(
+        request: Request,
+        response: Response,
+        db:Session,
+        refresh_token_repository: RefreshTokenRepository = Depends(Provide[Container.refresh_token_repository])
+) -> MemberDTO:
     access_token = request.cookies.get("access_token")
     refresh_token = request.cookies.get("refresh_token")
 
@@ -28,7 +38,7 @@ def get_current_user_from_cookie(request: Request, response: Response, db:Sessio
         jti = decoded_refresh_token["jti"]
         if jti is None:
             raise HTTPException(status_code=401, detail="Invalid or expired token")
-        db_token:RefreshToken|None = db.query(RefreshToken).filter(RefreshToken.jti == jti).one_or_none()
+        db_token:RefreshToken|None = refresh_token_repository.find_refresh_token(db, jti)
         if db_token is None:
             raise HTTPException(status_code=401, detail="Invalid or expired token")
         member = db_token.member

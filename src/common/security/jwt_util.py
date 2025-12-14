@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
-from typing import Optional
+from typing import Optional, Literal
 from common.env import settings
 from domain.member.entity import Member
 from fastapi import HTTPException, Response
@@ -35,7 +35,7 @@ def dict_to_member(member: dict) -> MemberDTO:
         raise HTTPException(status_code=404, detail="Invalid token")
     return MemberDTO(**member)
 
-def set_token(member: Member, scope: str, response: Response) -> TokenDTO:
+def set_token(member: Member, scope: Literal["access", "refresh"], response: Response) -> TokenDTO:
     token_time: timedelta = timedelta(minutes=15)
     match scope:
         case "access":
