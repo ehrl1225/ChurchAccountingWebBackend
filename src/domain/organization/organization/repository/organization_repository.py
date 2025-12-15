@@ -15,3 +15,7 @@ class OrganizationRepository:
         db.flush()
         db.refresh(organization)
         return organization
+
+    async def find_by_id(self, db: Session, id: int) -> Organization:
+        organization = db.query(Organization).get(id)
+        return organization
