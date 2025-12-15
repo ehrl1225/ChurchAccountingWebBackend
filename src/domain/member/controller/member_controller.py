@@ -29,7 +29,7 @@ async def register_member(
         if await member_service.check_email(db, email):
             raise HTTPException(status_code=400, detail="Invalid email")
         await member_service.add_member(db, registerForm)
-        await auth_service.send_email_verification(email,tasks)
+        # await auth_service.send_email_verification(email,tasks)
         db.commit()
     except Exception as e:
         db.rollback()

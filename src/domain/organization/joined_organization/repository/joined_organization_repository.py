@@ -1,3 +1,4 @@
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from common.database import MemberRole
@@ -24,4 +25,12 @@ class JoinedOrganizationRepository:
         db.add(joined_organization)
         db.flush()
         db.refresh(joined_organization)
+        return joined_organization
+
+    def find_by_member_and_organization(self, db: Session, member: Member, organization: Organization):
+        joined_organization = (db
+                               .query(JoinedOrganization)
+                               .filter(and_(JoinedOrganization.member_id == member.id,
+                                            JoinedOrganization.organization_id == organization.id))
+                               .one_or_none())
         return joined_organization
