@@ -22,7 +22,7 @@ def get_current_user(token: str) -> Optional[MemberDTO]:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 @inject
-def get_current_user_from_cookie(
+async def get_current_user_from_cookie(
         request: Request,
         response: Response,
         db:Session,

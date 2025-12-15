@@ -9,7 +9,6 @@ from common.env import settings
 from domain.member.dto import RegisterFormDTO, LoginFormDTO
 from domain.member.service import MemberService
 from domain.member.service.auth_service import AuthService
-from domain.member.entity import Member
 from common.security.rq import get_current_user_from_cookie
 
 router = APIRouter(prefix="/member", tags=["member"])
@@ -76,4 +75,4 @@ async def me(
         response:Response,
         db:Session = Depends(get_db),
 ):
-    return get_current_user_from_cookie(request,response, db)
+    return await get_current_user_from_cookie(request,response, db)

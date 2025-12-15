@@ -1,1 +1,1 @@
-from .organization_controller import router
+from .organization_invitation_controller import router
