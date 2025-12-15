@@ -5,6 +5,7 @@ from common.database.member_role import MemberRole
 from common.security.member_DTO import MemberDTO
 from domain.member.entity import Member
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository
+from domain.organization.organization_invitation.entity import StatusEnum, OrganizationInvitation
 from domain.organization.organization_invitation.repository import OrganizationInvitationRepository
 from domain.organization.organization_invitation.dto import CreateOrganizationInvitationDto
 from domain.organization.organization.repository import OrganizationRepository
@@ -34,4 +35,16 @@ class OrganizationInvitationService:
         member = await self.member_repository.get_member_by_email(db, create_invitation_dto.email)
         invitation = await self.organization_invitation_repository.create_invitation(db, organization, member)
         return invitation
+
+    async def update(self, db:Session, me_dto:MemberDTO , organization_invitation_id:int, status_enum: StatusEnum):
+        organization_invitation: OrganizationInvitation = await self.organization_invitation_repository.find_by_id(db, organization_invitation_id)
+        if organization_invitation.member_id != me_dto.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        if status_enum == StatusEnum.ACCEPTED:
+            organization = await self.organization_repository.find_by_id(db, organization_invitation.organization_id)
+            me = await self.member_repository.find_by_id(db, me_dto.id)
+            self.joined_organization_repository.join_organization(db, organization, me, MemberRole.READ_ONLY)
+        await self.organization_invitation_repository.update_invitation_status(db, organization_invitation, status_enum)
+
+
 
