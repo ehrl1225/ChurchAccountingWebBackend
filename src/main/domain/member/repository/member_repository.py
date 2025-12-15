@@ -1,9 +1,7 @@
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from domain.member.dto import RegisterFormDTO
 from domain.member.entity import Member
-from typing import Type, Optional
+from typing import Optional
 
 
 class MemberRepository:

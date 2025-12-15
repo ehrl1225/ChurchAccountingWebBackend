@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from jose import jwt, JWTError
+from jose import jwt
 from typing import Optional, Literal
 from common.env import settings
 from domain.member.entity import Member

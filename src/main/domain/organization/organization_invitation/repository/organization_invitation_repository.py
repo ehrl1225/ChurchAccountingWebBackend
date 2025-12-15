@@ -2,7 +2,6 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from domain.organization import organization_invitation
 from domain.organization.organization.entity import Organization
 from domain.member.entity import Member
 from domain.organization.organization_invitation.entity import OrganizationInvitation, StatusEnum

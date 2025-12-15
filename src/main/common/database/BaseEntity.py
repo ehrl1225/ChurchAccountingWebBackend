@@ -1,4 +1,3 @@
-from sqlalchemy import Column, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from common.database import Base

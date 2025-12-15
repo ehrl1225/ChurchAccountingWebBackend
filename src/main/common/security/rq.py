@@ -1,13 +1,11 @@
-from datetime import timedelta
-
 from dependency_injector.wiring import inject, Provide
-from fastapi import HTTPException, status, Request, Response, Depends
+from fastapi import HTTPException, Request, Response, Depends
 from jose import JWTError
 from sqlalchemy.orm import Session
 
 from domain.member.repository import RefreshTokenRepository
-from .jwt_util import decode_token, dict_to_member, member_to_dict, set_token
-from domain.member.entity import Member, RefreshToken
+from .jwt_util import decode_token, dict_to_member, set_token
+from domain.member.entity import RefreshToken
 from .member_DTO import MemberDTO
 from typing import Optional
 
