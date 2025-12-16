@@ -1,18 +1,30 @@
-from dependency_injector.wiring import inject
-from fastapi import APIRouter, Request, Response, Depends
+from dependency_injector.wiring import inject, Provide
+from fastapi import APIRouter, Request, Response, Depends, status
 from sqlalchemy.orm import Session
 
 from common.database import get_db
+from common.dependency_injector import Container
 from common.security.rq import get_current_user_from_cookie
+from domain.organization.joined_organization.dto import ChangeRoleDto
+from domain.organization.joined_organization.service import JoinedOrganizationService
 
 router = APIRouter(prefix="/joined-organization", tags=["joined-organization"])
 
-@router.put("/{organization_id}")
+@router.put("/{organization_id}", status_code=status.HTTP_200_OK)
 @inject
 async def change_role(
         request: Request,
         response: Response,
         organization_id: int,
-        db: Session = Depends(get_db)
+        change_role: ChangeRoleDto,
+        db: Session = Depends(get_db),
+        joined_organization_service:JoinedOrganizationService =  Depends(Provide[Container.joined_organization_service])
 ):
-    me_dto = await get_current_user_from_cookie(request, response, db)
+    try:
+        me_dto = await get_current_user_from_cookie(request, response, db)
+        await joined_organization_service.change_member_role(db, me_dto, organization_id, change_role)
+        db.commit()
+    except Exception as err:
+        db.rollback()
+        raise err
+

@@ -7,6 +7,7 @@ from domain.organization.organization.service import OrganizationService
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository
 from domain.organization.organization_invitation.repository import OrganizationInvitationRepository
 from domain.organization.organization_invitation.service import OrganizationInvitationService
+from domain.organization.joined_organization.service import JoinedOrganizationService
 
 
 class Container(containers.DeclarativeContainer):
@@ -34,4 +35,10 @@ class Container(containers.DeclarativeContainer):
         organization_repository,
         member_repository,
         joined_organization_repository,
+    )
+    joined_organization_service: JoinedOrganizationService = providers.Singleton(
+        JoinedOrganizationService,
+        joined_organization_repository,
+        member_repository,
+        organization_repository
     )

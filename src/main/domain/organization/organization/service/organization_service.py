@@ -26,5 +26,5 @@ class OrganizationService:
         member = await self.organization_member_repository.find_by_id(db, member_dto.id)
         if not member:
             raise HTTPException(status_code=400, detail="Member not found")
-        self.joined_organization_repository.join_organization(db, organization, member, MemberRole.OWNER)
+        await self.joined_organization_repository.join_organization(db, organization, member, MemberRole.OWNER)
         return organization
