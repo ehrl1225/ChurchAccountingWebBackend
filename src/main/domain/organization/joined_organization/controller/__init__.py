@@ -1,0 +1,1 @@
+from .joined_organization_controller import router
