@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
     SERVER_PEPPER: str
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+    REGION_NAME: str
+    BUCKET_NAME: str
 
 
     model_config = SettingsConfigDict(

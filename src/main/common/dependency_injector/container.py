@@ -8,6 +8,9 @@ from domain.organization.joined_organization.repository import JoinedOrganizatio
 from domain.organization.organization_invitation.repository import OrganizationInvitationRepository
 from domain.organization.organization_invitation.service import OrganizationInvitationService
 from domain.organization.joined_organization.service import JoinedOrganizationService
+from domain.file.file.service import FileService, StorageService, LocalStorageService, S3StorageService
+from domain.file.file.repository import FileRepository
+from common.env import settings
 
 
 class Container(containers.DeclarativeContainer):
@@ -20,6 +23,7 @@ class Container(containers.DeclarativeContainer):
     organization_repository: OrganizationRepository = providers.Singleton(OrganizationRepository)
     joined_organization_repository: JoinedOrganizationRepository = providers.Singleton(JoinedOrganizationRepository)
     organization_invitation_repository: OrganizationInvitationRepository = providers.Singleton(OrganizationInvitationRepository)
+    file_repository: FileRepository = providers.Singleton(FileRepository)
 
     member_service: MemberService = providers.Singleton(MemberService, member_repository)
     auth_service: AuthService = providers.Singleton(AuthService, member_repository, refresh_token_repository)
@@ -42,3 +46,10 @@ class Container(containers.DeclarativeContainer):
         member_repository,
         organization_repository
     )
+    storage_service: providers.Provider[StorageService] = providers.Selector(
+        lambda : settings.PROFILE,
+        prod=providers.Singleton(S3StorageService),
+        dev=providers.Singleton(LocalStorageService),
+        test=providers.Singleton(LocalStorageService),
+    )
+    file_service:FileService = providers.Singleton(FileService, file_repository)
