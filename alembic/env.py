@@ -4,8 +4,18 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-from main.common import settings
-from main.common import Base
+from common.env import settings
+from common.database import Base
+
+from domain.file.file.entity import FileInfo
+from domain.ledger.category.category.entity import Category
+from domain.ledger.category.item.entity import Item
+from domain.ledger.event.entity import Event
+from domain.ledger.receipt.entity import Receipt
+from domain.member.entity import Member, RefreshToken
+from domain.organization.joined_organization.entity import JoinedOrganization
+from domain.organization.organization.entity import Organization
+from domain.organization.organization_invitation.entity import OrganizationInvitation
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
