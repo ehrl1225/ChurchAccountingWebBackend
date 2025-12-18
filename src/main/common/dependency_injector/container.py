@@ -10,6 +10,12 @@ from domain.organization.organization_invitation.service import OrganizationInvi
 from domain.organization.joined_organization.service import JoinedOrganizationService
 from domain.file.file.service import FileService, StorageService, LocalStorageService, S3StorageService
 from domain.file.file.repository import FileRepository
+from domain.ledger.category.category.repository import CategoryRepository
+from domain.ledger.category.item.repository import ItemRepository
+from domain.ledger.event.repository import EventRepository
+from domain.ledger.receipt.repository import ReceiptRepository
+from domain.ledger.category.category.service import CategoryService
+
 from common.env import settings
 
 
@@ -24,9 +30,17 @@ class Container(containers.DeclarativeContainer):
     joined_organization_repository: JoinedOrganizationRepository = providers.Singleton(JoinedOrganizationRepository)
     organization_invitation_repository: OrganizationInvitationRepository = providers.Singleton(OrganizationInvitationRepository)
     file_repository: FileRepository = providers.Singleton(FileRepository)
+    category_repository: CategoryRepository = providers.Singleton(CategoryRepository)
+    item_repository: ItemRepository = providers.Singleton(ItemRepository)
+    event_repository: EventRepository = providers.Singleton(EventRepository)
+    receipt_repository: ReceiptRepository = providers.Singleton(ReceiptRepository)
 
     member_service: MemberService = providers.Singleton(MemberService, member_repository)
-    auth_service: AuthService = providers.Singleton(AuthService, member_repository, refresh_token_repository)
+    auth_service: AuthService = providers.Singleton(
+        AuthService,
+        member_repository,
+        refresh_token_repository
+    )
     organization_service: OrganizationService = providers.Singleton(
         OrganizationService,
         organization_repository,
@@ -53,3 +67,9 @@ class Container(containers.DeclarativeContainer):
         test=providers.Singleton(LocalStorageService),
     )
     file_service:FileService = providers.Singleton(FileService, file_repository)
+    category_service:CategoryService = providers.Singleton(
+        CategoryService,
+        category_repository,
+        item_repository,
+        organization_repository
+    )

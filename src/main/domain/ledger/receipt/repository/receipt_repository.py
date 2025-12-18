@@ -1,0 +1,4 @@
+
+
+class ReceiptRepository:
+    pass
