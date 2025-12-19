@@ -23,7 +23,7 @@ async def create_category(
     try:
         me_dto = await get_current_user_from_cookie(request=request,response=response, db=db)
 
-        await category_service.create(db, create_category)
+        await category_service.create(db,me_dto, create_category)
         db.commit()
     except Exception as err:
         db.rollback()

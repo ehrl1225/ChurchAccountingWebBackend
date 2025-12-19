@@ -15,6 +15,7 @@ from domain.ledger.category.item.repository import ItemRepository
 from domain.ledger.event.repository import EventRepository
 from domain.ledger.receipt.repository import ReceiptRepository
 from domain.ledger.category.category.service import CategoryService
+from domain.ledger.category.item.service import ItemService
 
 from common.env import settings
 
@@ -71,5 +72,15 @@ class Container(containers.DeclarativeContainer):
         CategoryService,
         category_repository,
         item_repository,
-        organization_repository
+        organization_repository,
+        member_repository,
+        joined_organization_repository,
+    )
+    item_service:ItemService = providers.Singleton(
+        ItemService,
+        category_repository,
+        item_repository,
+        member_repository,
+        organization_repository,
+        joined_organization_repository
     )
