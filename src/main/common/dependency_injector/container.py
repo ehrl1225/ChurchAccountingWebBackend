@@ -1,4 +1,5 @@
 from dependency_injector import containers, providers
+
 from domain.member.repository import MemberRepository, RefreshTokenRepository
 from domain.member.service import MemberService
 from domain.member.service.auth_service import AuthService
@@ -16,6 +17,7 @@ from domain.ledger.event.repository import EventRepository
 from domain.ledger.receipt.repository import ReceiptRepository
 from domain.ledger.category.category.service import CategoryService
 from domain.ledger.category.item.service import ItemService
+from domain.ledger.event.service import EventService
 
 from common.env import settings
 
@@ -83,4 +85,8 @@ class Container(containers.DeclarativeContainer):
         member_repository,
         organization_repository,
         joined_organization_repository
+    )
+    event_service:EventService = providers.Singleton(
+        EventService,
+        event_repository
     )
