@@ -3,8 +3,9 @@ from fastapi import APIRouter, Request, Response, Depends, status
 from sqlalchemy.orm import Session
 
 from common.database import get_db
+from common.database.member_role import OWNER2ADMIN_MASK
 from common.dependency_injector import Container
-from common.security.rq import get_current_user_from_cookie
+from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.organization.joined_organization.dto import ChangeRoleDto
 from domain.organization.joined_organization.service import JoinedOrganizationService
 
@@ -22,6 +23,12 @@ async def change_role(
 ):
     try:
         me_dto = await get_current_user_from_cookie(request, response, db)
+        await check_member_role(
+            db=db,
+            member_id=me_dto.id,
+            organization_id=organization_id,
+            member_role_mask=OWNER2ADMIN_MASK,
+        )
         await joined_organization_service.change_member_role(db, me_dto, organization_id, change_role)
         db.commit()
     except Exception as err:

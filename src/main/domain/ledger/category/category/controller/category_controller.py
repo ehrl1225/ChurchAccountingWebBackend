@@ -5,7 +5,8 @@ from starlette import status
 
 from common.database import get_db
 from common.dependency_injector import Container
-from common.security.rq import get_current_user_from_cookie
+from common.security.rq import get_current_user_from_cookie, check_member_role
+from common.database.member_role import OWNER2READ_WRITE_MASK
 from domain.ledger.category.category.dto import CreateCategoryDTO
 from domain.ledger.category.category.service import CategoryService
 
@@ -22,8 +23,13 @@ async def create_category(
 ):
     try:
         me_dto = await get_current_user_from_cookie(request=request,response=response, db=db)
-
-        await category_service.create(db,me_dto, create_category)
+        await check_member_role(
+            db=db,
+            member_id=me_dto.id,
+            organization_id=create_category.organization_id,
+            member_role_mask=OWNER2READ_WRITE_MASK,
+        )
+        await category_service.create(db,create_category)
         db.commit()
     except Exception as err:
         db.rollback()

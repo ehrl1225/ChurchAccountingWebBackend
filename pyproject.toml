@@ -8,6 +8,7 @@ dependencies = [
     "alembic>=1.17.2",
     "authlib>=1.6.5",
     "boto3>=1.42.10",
+    "boto3-stubs~=1.42.10",
     "dependency-injector==4.48.3",
     "email-validator>=2.3.0",
     "fastapi==0.124.0",

@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from common.database import MemberRole
 from common.security.member_DTO import MemberDTO
+from domain.organization.joined_organization.dto.create_joined_organization_dto import CreateJoinedOrganizationDto
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository
 from domain.organization.organization.repository import OrganizationRepository
 from domain.organization.organization.dto import OrganizationCreateDto
@@ -26,5 +27,9 @@ class OrganizationService:
         member = await self.organization_member_repository.find_by_id(db, member_dto.id)
         if not member:
             raise HTTPException(status_code=400, detail="Member not found")
-        await self.joined_organization_repository.join_organization(db, organization, member, MemberRole.OWNER)
+        await self.joined_organization_repository.join_organization(db, CreateJoinedOrganizationDto(
+            organization_id=organization.id,
+            member_id=member.id,
+            member_role=MemberRole.OWNER,
+        ))
         return organization

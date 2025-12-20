@@ -5,11 +5,12 @@ from dependency_injector.wiring import inject, Provide
 from sqlalchemy.orm import Session
 
 from common.database import get_db
+from common.database.member_role import OWNER2ADMIN_MASK
 from common.dependency_injector import Container
 from domain.organization.organization_invitation.dto import CreateOrganizationInvitationDto
 from domain.organization.organization_invitation.entity import StatusEnum
 from domain.organization.organization_invitation.service import OrganizationInvitationService
-from common.security.rq import get_current_user_from_cookie
+from common.security.rq import get_current_user_from_cookie, check_member_role
 
 router = APIRouter(prefix="/organization/invitation", tags=["Organization Invitation"])
 
@@ -23,8 +24,14 @@ async def create_organization_invitation(
         organization_invitation_service:OrganizationInvitationService =  Depends(Provide[Container.organization_invitation_service])
 ):
     try:
-        member = get_current_user_from_cookie(request, response, db)
-        await organization_invitation_service.create(db, member, organization_invitation_dto)
+        me_dto = await get_current_user_from_cookie(request, response, db)
+        await check_member_role(
+            db=db,
+            member_id=me_dto.id,
+            organization_id=organization_invitation_dto.organization_id,
+            member_role_mask=OWNER2ADMIN_MASK
+        )
+        await organization_invitation_service.create(db, organization_invitation_dto)
         db.commit()
     except Exception as err:
         db.rollback()
