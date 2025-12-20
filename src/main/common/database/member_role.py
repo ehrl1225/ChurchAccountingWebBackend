@@ -15,7 +15,7 @@ _ROLES_BY_BIT = (
 )
 
 def get_member_roles(mask: int) -> list[MemberRole]:
-    if 0<=mask<=15:
+    if not 0<=mask<=15:
         return []
     roles = []
     for i, role in enumerate(_ROLES_BY_BIT):
