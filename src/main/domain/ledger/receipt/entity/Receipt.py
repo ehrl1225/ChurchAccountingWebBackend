@@ -6,8 +6,8 @@ from datetime import date
 class Receipt(BaseEntity):
     __tablename__ = "receipt"
 
-    receipt_image_url: Mapped[str] = mapped_column(String)
-    paper_date: Mapped[date] = mapped_column(Date)
+    receipt_image_url: Mapped[str] = mapped_column(String, nullable=True)
+    paper_date: Mapped[date] = mapped_column(Date, nullable=False)
     actual_date: Mapped[date] = mapped_column(Date, nullable=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     tx_type: Mapped[TxType] = mapped_column(Enum(TxType, name="tx_type_enum"), nullable=False)

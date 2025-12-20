@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from domain.organization.organization.entity import Organization
 from domain.organization.organization.dto import OrganizationCreateDto
+from typing import Optional
 
 class OrganizationRepository:
 
@@ -16,6 +17,6 @@ class OrganizationRepository:
         db.refresh(organization)
         return organization
 
-    async def find_by_id(self, db: Session, id: int) -> Organization:
+    async def find_by_id(self, db: Session, id: int) -> Optional[Organization]:
         organization = db.query(Organization).get(id)
         return organization
