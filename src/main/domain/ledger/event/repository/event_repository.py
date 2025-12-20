@@ -12,18 +12,18 @@ class EventRepository:
     async def create_event(
             self,
             db:Session,
-            organization: Organization,
             create_event_dto: CreateEventDTO
     ):
         event = Event(
             name=create_event_dto.name,
             start_date=create_event_dto.start_date,
             end_date=create_event_dto.end_date,
-            organization=organization,
+            organization_id=create_event_dto.organization_id,
             year=create_event_dto.year,
         )
         db.add(event)
         db.flush()
+        db.refresh(event)
         return event
 
     async def find_event_by_id(self, db:Session, id:int) -> Optional[Event]:

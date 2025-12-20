@@ -1,5 +1,5 @@
 from dependency_injector.wiring import inject, Provide
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, Response, Request
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, Response, Request, status
 from sqlalchemy.orm import Session
 
 from common.database import get_db
@@ -14,7 +14,7 @@ from common.security.rq import get_current_user_from_cookie
 router = APIRouter(prefix="/member", tags=["member"])
 
 
-@router.post("/register")
+@router.post("/register", status_code=status.HTTP_201_CREATED)
 @inject
 async def register_member(
         registerForm: RegisterFormDTO,
@@ -34,7 +34,7 @@ async def register_member(
         db.rollback()
         raise e
 
-@router.post("/login")
+@router.post("/login", status_code=status.HTTP_200_OK)
 @inject
 async def login_member(
         loginForm: LoginFormDTO,
@@ -53,7 +53,7 @@ async def login_member(
         raise e
 
 
-@router.get("/verify")
+@router.get("/verify", status_code=status.HTTP_200_OK)
 @inject
 async def verify_email(
         token: str = Query(...),
@@ -69,7 +69,7 @@ async def verify_email(
         raise HTTPException(status_code=400, detail="Invalid token")
 
 
-@router.get("/me")
+@router.get("/me", status_code=status.HTTP_200_OK)
 async def me(
         request: Request,
         response:Response,

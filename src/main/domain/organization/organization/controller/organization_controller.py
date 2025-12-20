@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 from dependency_injector.wiring import inject, Provide
 
@@ -10,7 +10,7 @@ from domain.organization.organization.dto import OrganizationCreateDto
 
 router = APIRouter(prefix="/organization", tags=["organization"])
 
-@router.post("/")
+@router.post("/", status_code=status.HTTP_201_CREATED)
 @inject
 async def create_organization(
         organization:OrganizationCreateDto,
@@ -19,6 +19,6 @@ async def create_organization(
         db:Session = Depends(get_db),
         organization_service:OrganizationService = Depends(Provide[Container.organization_service])
 ):
-    member = get_current_user_from_cookie(request, response, db)
-    organization = await organization_service.create(db, member, organization)
+    member = await get_current_user_from_cookie(request, response, db)
+    await organization_service.create(db, member, organization)
 

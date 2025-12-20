@@ -15,11 +15,7 @@ class ReceiptRepository:
     async def create_receipt(
             self,
             db:Session,
-            create_receipt_dto: CreateReceiptDto,
-            category: Category,
-            item: Item,
-            organization: Organization,
-            event: Optional[Event] = None,
+            create_receipt_dto: CreateReceiptDto
     ):
         receipt = Receipt(
             receipt_image_url=create_receipt_dto.receipt_image_url,
@@ -28,11 +24,11 @@ class ReceiptRepository:
             name=create_receipt_dto.name,
             tx_type=create_receipt_dto.tx_type,
             amount=create_receipt_dto.amount,
-            category=category,
-            item=item,
-            event=event,
+            category_id=create_receipt_dto.category_id,
+            item_id=create_receipt_dto.item_id,
+            event_id=create_receipt_dto.event_id,
             etc=create_receipt_dto.etc,
-            organization=organization,
+            organization_id=create_receipt_dto.organization_id,
             year=create_receipt_dto.year,
         )
         db.add(receipt)

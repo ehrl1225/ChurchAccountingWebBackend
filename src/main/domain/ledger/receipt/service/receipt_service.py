@@ -34,20 +34,8 @@ class ReceiptService:
         self.member_repository = member_repository
         self.joined_organization_repository = joined_organization_repository
 
-    async def create_receipt(self, db:Session, me_dto:MemberDTO,create_receipt_dto:CreateReceiptDto):
-        category = await self.category_repository.find_category_by_id(db, create_receipt_dto.category_id)
-        item = await self.item_repository.find_item_by_id(db, create_receipt_dto.item_id)
-        event = await self.event_repository.find_event_by_id(db, create_receipt_dto.event_id) if create_receipt_dto.event_id else None
-        organization = await self.organization_repository.find_by_id(db, create_receipt_dto.organization_id)
-        me = await self.member_repository.find_by_id(db, me_dto.id)
-        joined_organization: JoinedOrganization = await self.joined_organization_repository.find_by_member_and_organization(db, me, organization)
-        if joined_organization.member_role not in [MemberRole.READ_WRITE, MemberRole.ADMIN, MemberRole.OWNER]:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Member role not allowed")
+    async def create_receipt(self, db:Session, create_receipt_dto:CreateReceiptDto):
         await self.receipt_repository.create_receipt(
             db,
-            create_receipt_dto,
-            category,
-            item,
-            organization,
-            event
+            create_receipt_dto
         )

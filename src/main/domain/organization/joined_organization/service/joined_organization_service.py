@@ -24,17 +24,18 @@ class JoinedOrganizationService:
     async def change_member_role(
             self,
             db:Session,
-            me_dto:MemberDTO,
             organization_id:int,
             change_role: ChangeRoleDto
     ):
-        me = await self.member_repository.find_by_id(db, me_dto.id)
         organization = await self.organization_repository.find_by_id(db, organization_id)
+        if not organization:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
         member = await self.member_repository.find_by_id(db, change_role.member_id)
-        my_joined_organization:JoinedOrganization = await self.joined_organization_repository.find_by_member_and_organization(db, me, organization)
-        if my_joined_organization.member_role not in [MemberRole.ADMIN, MemberRole.OWNER]:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect role given")
+        if not member:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
         joined_organization = await self.joined_organization_repository.find_by_member_and_organization(db, member, organization)
+        if not joined_organization:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not joined organization")
         await self.joined_organization_repository.change_member_role(db, joined_organization, change_role.member_role)
 
 

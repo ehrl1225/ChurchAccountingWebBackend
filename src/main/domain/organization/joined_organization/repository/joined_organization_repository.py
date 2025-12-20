@@ -2,6 +2,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from common.database import MemberRole
+from domain.organization.joined_organization.dto.create_joined_organization_dto import CreateJoinedOrganizationDto
 from domain.organization.organization.entity import Organization
 from domain.member.entity import Member
 from domain.organization.joined_organization.entity import JoinedOrganization
@@ -11,16 +12,12 @@ class JoinedOrganizationRepository:
     async def join_organization(
             self,
             db: Session,
-            organization: Organization,
-            member: Member,
-            member_role:MemberRole
+            create_joined_organization: CreateJoinedOrganizationDto
     ):
         joined_organization = JoinedOrganization(
-            member_role=member_role,
-            organization_id=organization.id,
-            member_id=member.id,
-            organization=organization,
-            member=member,
+            member_role=create_joined_organization.member_role,
+            organization_id=create_joined_organization.organization_id,
+            member_id=create_joined_organization.member_id,
         )
         db.add(joined_organization)
         db.flush()
