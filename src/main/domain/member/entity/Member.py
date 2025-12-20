@@ -16,9 +16,15 @@ class Member(BaseEntity):
     )
     organization_invitations: Mapped[list["OrganizationInvitation"]] = relationship(
         "OrganizationInvitation",
+        primaryjoin="Member.id == OrganizationInvitation.member_id",
         back_populates="member",
     )
     joined_organization: Mapped[list["JoinedOrganization"]] = relationship(
         "JoinedOrganization",
         back_populates="member",
+    )
+    invitor_invitations: Mapped[list["OrganizationInvitation"]] = relationship(
+        "OrganizationInvitation",
+        primaryjoin="Member.id == OrganizationInvitation.invitor_id",
+        back_populates="invitor",
     )
