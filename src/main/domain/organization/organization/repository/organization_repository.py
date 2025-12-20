@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 from domain.organization.organization.entity import Organization
 from domain.organization.organization.dto import OrganizationCreateDto
@@ -20,3 +22,12 @@ class OrganizationRepository:
     async def find_by_id(self, db: Session, id: int) -> Optional[Organization]:
         organization = db.query(Organization).get(id)
         return organization
+
+    async def hard_delete(self, db: Session, organization:Organization) -> None:
+        db.delete(organization)
+        db.flush()
+
+    async def soft_delete(self, db: Session, organization:Organization) -> None:
+        organization.deleted = True
+        organization.deleted_at = datetime.now()
+        db.flush()
