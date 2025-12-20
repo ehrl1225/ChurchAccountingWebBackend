@@ -1,8 +1,8 @@
 """init
 
-Revision ID: a15f79bda8a5
+Revision ID: 700528c6dd30
 Revises: 
-Create Date: 2025-12-20 13:27:42.201710
+Create Date: 2025-12-21 01:32:42.244276
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'a15f79bda8a5'
+revision: str = '700528c6dd30'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -44,9 +44,11 @@ def upgrade() -> None:
     )
     op.create_table('organization',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('description', sa.String(), nullable=False),
+    sa.Column('description', sa.String(), nullable=True),
     sa.Column('start_year', sa.Integer(), nullable=False),
     sa.Column('end_year', sa.Integer(), nullable=False),
+    sa.Column('deleted', sa.Boolean(), nullable=False),
+    sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
@@ -83,7 +85,9 @@ def upgrade() -> None:
     sa.Column('organization_id', sa.Integer(), nullable=False),
     sa.Column('member_id', sa.Integer(), nullable=False),
     sa.Column('status', sa.Enum('PENDING', 'ACCEPTED', 'REJECTED', name='status_enum'), nullable=False),
+    sa.Column('invitor_id', sa.Integer(), nullable=False),
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.ForeignKeyConstraint(['invitor_id'], ['member.id'], ),
     sa.ForeignKeyConstraint(['member_id'], ['member.id'], ),
     sa.ForeignKeyConstraint(['organization_id'], ['organization.id'], ),
     sa.PrimaryKeyConstraint('id')

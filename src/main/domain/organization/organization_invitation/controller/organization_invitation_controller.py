@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, List
 
 from fastapi import APIRouter, Request, Response, Depends, status, HTTPException
 from dependency_injector.wiring import inject, Provide
@@ -11,6 +11,7 @@ from domain.organization.organization_invitation.dto import CreateOrganizationIn
 from domain.organization.organization_invitation.entity import StatusEnum
 from domain.organization.organization_invitation.service import OrganizationInvitationService
 from common.security.rq import get_current_user_from_cookie, check_member_role
+from domain.organization.organization_invitation.dto import OrganizationInvitationResponseDto
 
 router = APIRouter(prefix="/organization/invitation", tags=["Organization Invitation"])
 
@@ -31,7 +32,7 @@ async def create_organization_invitation(
             organization_id=organization_invitation_dto.organization_id,
             member_role_mask=OWNER2ADMIN_MASK
         )
-        await organization_invitation_service.create(db, organization_invitation_dto)
+        await organization_invitation_service.create(db, me_dto, organization_invitation_dto)
         db.commit()
     except Exception as err:
         db.rollback()
@@ -63,3 +64,14 @@ async def update_organization_invitation(
         db.rollback()
         raise err
 
+@router.get("/", response_model=List[OrganizationInvitationResponseDto])
+@inject
+async def get_organization_invitations(
+        request: Request,
+        response: Response,
+        db:Session = Depends(get_db),
+        organization_invitation_service:OrganizationInvitationService = Depends(Provide[Container.organization_invitation_service])
+):
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    organization_invitations = await organization_invitation_service.get_invitations(db, me_dto)
+    return organization_invitations

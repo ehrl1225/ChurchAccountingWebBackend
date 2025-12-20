@@ -1,1 +1,2 @@
 from .create_invitation_dto import CreateOrganizationInvitationDto
+from .organization_invitation_response_dto import OrganizationInvitationResponseDto

@@ -1,6 +1,7 @@
 from typing import Optional
 
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.operators import and_
 
 from domain.organization.organization.entity import Organization
 from domain.member.entity import Member
@@ -9,11 +10,12 @@ from domain.organization.organization_invitation.entity import OrganizationInvit
 
 class OrganizationInvitationRepository:
 
-    async def create_invitation(self, db:Session, organization:Organization, member: Member):
+    async def create_invitation(self, db:Session, organization:Organization, member: Member, me_id:int):
         organization_invitation = OrganizationInvitation(
             organization_id=organization.id,
             member_id=member.id,
-            status=StatusEnum.PENDING
+            status=StatusEnum.PENDING,
+            invitor_id=me_id
         )
         db.add(organization_invitation)
         db.flush()
@@ -33,3 +35,6 @@ class OrganizationInvitationRepository:
 
     async def find_by_id(self, db:Session, id:int) -> Optional[OrganizationInvitation]:
         return db.query(OrganizationInvitation).get(id)
+
+    async def find_pending_by_member_id(self, db:Session, member_id:int) -> list[OrganizationInvitation]:
+        return db.query(OrganizationInvitation).filter(and_(OrganizationInvitation.member_id==member_id, OrganizationInvitation.status==StatusEnum.PENDING)).all()
