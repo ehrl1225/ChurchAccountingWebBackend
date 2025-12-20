@@ -22,3 +22,8 @@ def get_member_roles(mask: int) -> list[MemberRole]:
         if mask & (1 << i):
             roles.append(role)
     return roles
+
+OWNER_ONLY_MASK = 8
+OWNER2ADMIN_MASK = 12
+OWNER2READ_WRITE_MASK = 14
+OWNER2READ_MASK = 15
