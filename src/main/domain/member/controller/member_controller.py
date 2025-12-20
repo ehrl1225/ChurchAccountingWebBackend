@@ -52,6 +52,13 @@ async def login_member(
         db.rollback()
         raise e
 
+@router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout_member(
+        response:Response,
+):
+    response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token")
+
 
 @router.get("/verify", status_code=status.HTTP_200_OK)
 @inject
