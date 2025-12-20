@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from domain.ledger.event.dto import CreateEventDTO
 from domain.organization.organization.entity import Organization
@@ -24,3 +25,6 @@ class EventRepository:
         db.add(event)
         db.flush()
         return event
+
+    async def find_event_by_id(self, db:Session, id:int) -> Optional[Event]:
+        return db.query(Event).get(id)

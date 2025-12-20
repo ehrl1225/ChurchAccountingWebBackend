@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy.orm import Session
 
 from domain.ledger.category.category.entity import Category
@@ -18,3 +20,6 @@ class ItemRepository:
         db.flush()
         db.refresh(item)
         return item
+
+    async def find_item_by_id(self, db:Session, id:int) -> Optional[Item]:
+        return db.query(Item).get(id)
