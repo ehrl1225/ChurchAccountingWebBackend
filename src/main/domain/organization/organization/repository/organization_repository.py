@@ -1,6 +1,8 @@
 from datetime import datetime
 
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.operators import and_
+
 from domain.organization.organization.entity import Organization
 from domain.organization.organization.dto import OrganizationCreateDto
 from typing import Optional
