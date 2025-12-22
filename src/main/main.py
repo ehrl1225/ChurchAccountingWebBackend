@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from starlette.middleware.cors import CORSMiddleware
+
+from common.database import SessionLocal
 from domain.member.controller import router as member_router
 from domain.organization.organization.controller import router as organization_router
 from common.dependency_injector import Container
@@ -15,6 +17,23 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url=None
 )
+
+@app.middleware("http")
+async def db_session_middleware(request: Request, call_next):
+    try:
+        request.state.db = SessionLocal()
+        response = await call_next(request)
+        if response.status_code >= 400:
+            request.state.db.rollback()
+        else:
+            request.state.db.commit()
+    except Exception as e:
+        request.state.db.rollback()
+        raise e
+    finally:
+        if hasattr(request.state, "db"):
+            request.state.db.close()
+    return response
 
 @app.get("/")
 async def root():
