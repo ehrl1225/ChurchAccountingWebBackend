@@ -20,13 +20,8 @@ async def create_organization(
         db:Session = Depends(get_db),
         organization_service:OrganizationService = Depends(Provide[Container.organization_service])
 ):
-    try:
-        member = await get_current_user_from_cookie(request, response, db)
-        await organization_service.create(db, member, organization)
-        db.commit()
-    except Exception as err:
-        db.rollback()
-        raise err
+    member = await get_current_user_from_cookie(request, response, db)
+    await organization_service.create(db, member, organization)
 
 @router.delete("/{organization_id}", status_code=status.HTTP_204_NO_CONTENT)
 @inject
@@ -37,11 +32,6 @@ async def delete_organization(
         db:Session = Depends(get_db),
         organization_service:OrganizationService = Depends(Provide[Container.organization_service]),
 ):
-    try:
-        me_dto = await get_current_user_from_cookie(request, response, db)
-        await check_member_role(db, me_dto.id, organization_id, OWNER_ONLY_MASK)
-        await organization_service.delete(db, organization_id)
-        db.commit()
-    except Exception as err:
-        db.rollback()
-        raise err
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(db, me_dto.id, organization_id, OWNER_ONLY_MASK)
+    await organization_service.delete(db, organization_id)

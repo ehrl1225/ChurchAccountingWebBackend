@@ -21,17 +21,12 @@ async def change_role(
         db: Session = Depends(get_db),
         joined_organization_service:JoinedOrganizationService =  Depends(Provide[Container.joined_organization_service])
 ):
-    try:
-        me_dto = await get_current_user_from_cookie(request, response, db)
-        await check_member_role(
-            db=db,
-            member_id=me_dto.id,
-            organization_id=organization_id,
-            member_role_mask=OWNER2ADMIN_MASK,
-        )
-        await joined_organization_service.change_member_role(db, me_dto, organization_id, change_role)
-        db.commit()
-    except Exception as err:
-        db.rollback()
-        raise err
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=organization_id,
+        member_role_mask=OWNER2ADMIN_MASK,
+    )
+    await joined_organization_service.change_member_role(db, me_dto, organization_id, change_role)
 

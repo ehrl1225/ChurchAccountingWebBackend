@@ -31,3 +31,10 @@ async def init_test_database(db:Session):
         email="admin@admin.com",
         hashed_password=hash_password("password")
     )
+    for i in range(3):
+        await member_repository.add_member(
+            db=db,
+            name=f"test_user{i}",
+            email=f"test_user{i}@user.com",
+            hashed_password=hash_password("password")
+        )

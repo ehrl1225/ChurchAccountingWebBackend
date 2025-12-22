@@ -8,7 +8,7 @@ os.environ["PROFILE"]="test"
 
 from common.database import Base, engine, get_db
 from main import app
-from .common.database.init_test_data import init_test_database
+from .common_test.database.init_test_data import init_test_database
 import asyncio
 
 @pytest.fixture(scope="session", autouse=True)
@@ -41,7 +41,6 @@ def db_session() -> Session:
     session = Session(bind=connection)
 
     yield session
-
     session.close()
     transaction.rollback()
     connection.close()

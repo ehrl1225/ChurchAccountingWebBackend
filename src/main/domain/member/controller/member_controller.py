@@ -23,16 +23,11 @@ async def register_member(
         member_service: MemberService = Depends(Provide[Container.member_service]),
         auth_service: AuthService = Depends(Provide[Container.auth_service])
 ):
-    try:
-        email: str = str(registerForm.email)
-        if await member_service.check_email(db, email):
-            raise HTTPException(status_code=400, detail="Invalid email")
-        await member_service.add_member(db, registerForm)
-        # await auth_service.send_email_verification(email,tasks)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        raise e
+    email: str = str(registerForm.email)
+    if await member_service.check_email(db, email):
+        raise HTTPException(status_code=400, detail="Invalid email")
+    await member_service.add_member(db, registerForm)
+    # await auth_service.send_email_verification(email,tasks)
 
 @router.post("/login", status_code=status.HTTP_200_OK)
 @inject
@@ -44,13 +39,8 @@ async def login_member(
         member_service: MemberService = Depends(Provide[Container.member_service]),
         auth_service: AuthService = Depends(Provide[Container.auth_service])
 ):
-    try:
-        member = await member_service.verify_password(db, loginForm)
-        await auth_service.create_token(db, member,request, response)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        raise e
+    member = await member_service.verify_password(db, loginForm)
+    await auth_service.create_token(db, member,request, response)
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout_member(
@@ -67,13 +57,9 @@ async def verify_email(
         db: Session = Depends(get_db),
         auth_service: AuthService = Depends(Provide[Container.auth_service]),
 ):
-    try:
-        subject = verify_token(token, settings.profile_config.VERIFY_TOKEN_EXPIRATION)
-        await auth_service.set_verified(db,subject)
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="Invalid token")
+    subject = verify_token(token, settings.profile_config.VERIFY_TOKEN_EXPIRATION)
+    await auth_service.set_verified(db,subject)
+
 
 
 @router.get("/me", status_code=status.HTTP_200_OK)

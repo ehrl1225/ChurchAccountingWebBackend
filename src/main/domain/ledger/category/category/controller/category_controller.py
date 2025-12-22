@@ -21,16 +21,11 @@ async def create_category(
         db: Session = Depends(get_db),
         category_service:CategoryService = Depends(Provide[Container.category_service])
 ):
-    try:
-        me_dto = await get_current_user_from_cookie(request=request,response=response, db=db)
-        await check_member_role(
-            db=db,
-            member_id=me_dto.id,
-            organization_id=create_category.organization_id,
-            member_role_mask=OWNER2READ_WRITE_MASK,
-        )
-        await category_service.create(db,create_category)
-        db.commit()
-    except Exception as err:
-        db.rollback()
-        raise err
+    me_dto = await get_current_user_from_cookie(request=request,response=response, db=db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=create_category.organization_id,
+        member_role_mask=OWNER2READ_WRITE_MASK,
+    )
+    await category_service.create(db,create_category)

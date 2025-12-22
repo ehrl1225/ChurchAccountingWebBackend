@@ -20,14 +20,9 @@ async def upload_file(
         storage_service: StorageService = Depends(Provide[Container.storage_service]),
         file_service: FileService = Depends(Provide[Container.file_service])
 ):
-    try:
-        ext = pathlib.Path(file.filename).suffix
-        filename = f"{uuid.uuid4().hex}{ext}"
-        await file_service.create_file_info(db, file, filename, await storage_service.get_file_url(filename))
-        await storage_service.upload_file(file.file, filename, file.content_type)
-        db.commit()
-    except Exception as exc:
-        db.rollback()
-        raise exc
+    ext = pathlib.Path(file.filename).suffix
+    filename = f"{uuid.uuid4().hex}{ext}"
+    await file_service.create_file_info(db, file, filename, await storage_service.get_file_url(filename))
+    await storage_service.upload_file(file.file, filename, file.content_type)
 
 

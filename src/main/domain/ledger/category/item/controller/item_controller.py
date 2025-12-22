@@ -21,17 +21,12 @@ async def create_item(
         db: Session = Depends(get_db),
         item_service: ItemService = Depends(Provide[Container.item_service])
 ):
-    try:
-        me_dto: MemberDTO = await get_current_user_from_cookie(request, response, db)
-        await check_member_role(
-            db=db,
-            member_id=me_dto.id,
-            organization_id=create_item_dto.organization_id,
-            member_role_mask=OWNER2READ_WRITE_MASK,
-        )
-        await item_service.create_item(db, create_item_dto)
-        db.commit()
-    except Exception as err:
-        db.rollback()
-        raise err
+    me_dto: MemberDTO = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=create_item_dto.organization_id,
+        member_role_mask=OWNER2READ_WRITE_MASK,
+    )
+    await item_service.create_item(db, create_item_dto)
 
