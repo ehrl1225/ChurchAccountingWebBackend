@@ -24,19 +24,14 @@ async def create_organization_invitation(
         db: Session = Depends(get_db),
         organization_invitation_service:OrganizationInvitationService =  Depends(Provide[Container.organization_invitation_service])
 ):
-    try:
-        me_dto = await get_current_user_from_cookie(request, response, db)
-        await check_member_role(
-            db=db,
-            member_id=me_dto.id,
-            organization_id=organization_invitation_dto.organization_id,
-            member_role_mask=OWNER2ADMIN_MASK
-        )
-        await organization_invitation_service.create(db, me_dto, organization_invitation_dto)
-        db.commit()
-    except Exception as err:
-        db.rollback()
-        raise err
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=organization_invitation_dto.organization_id,
+        member_role_mask=OWNER2ADMIN_MASK
+    )
+    await organization_invitation_service.create(db, me_dto, organization_invitation_dto)
 
 @router.put("/{organization_invitation_id}/{status}", status_code=status.HTTP_200_OK)
 @inject
@@ -48,21 +43,16 @@ async def update_organization_invitation(
         db: Session = Depends(get_db),
         organization_invitation_service: OrganizationInvitationService = Depends(Provide[Container.organization_invitation_service])
 ):
-    try:
-        me = await get_current_user_from_cookie(request, response, db)
-        status_enum = StatusEnum.PENDING
-        match status_literal:
-            case "accept":
-                status_enum = StatusEnum.ACCEPTED
-            case "reject":
-                status_enum = StatusEnum.REJECTED
-            case _:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-        await organization_invitation_service.update(db, me, organization_invitation_id, status_enum)
-        db.commit()
-    except Exception as err:
-        db.rollback()
-        raise err
+    me = await get_current_user_from_cookie(request, response, db)
+    status_enum = StatusEnum.PENDING
+    match status_literal:
+        case "accept":
+            status_enum = StatusEnum.ACCEPTED
+        case "reject":
+            status_enum = StatusEnum.REJECTED
+        case _:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+    await organization_invitation_service.update(db, me, organization_invitation_id, status_enum)
 
 @router.get("/", response_model=List[OrganizationInvitationResponseDto])
 @inject

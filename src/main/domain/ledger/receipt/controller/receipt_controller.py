@@ -21,16 +21,11 @@ async def create_receipt(
         db:Session = Depends(get_db),
         receipt_service:ReceiptService =  Depends(Provide[Container.receipt_service])
 ):
-    try:
-        me_dto = await get_current_user_from_cookie(request, response, db)
-        await check_member_role(
-            db=db,
-            member_id=me_dto.id,
-            organization_id=create_receipt_dto.organization_id,
-            member_role_mask=OWNER2READ_WRITE_MASK
-        )
-        await receipt_service.create_receipt(db, create_receipt_dto)
-        db.commit()
-    except Exception as err:
-        db.rollback()
-        raise err
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=create_receipt_dto.organization_id,
+        member_role_mask=OWNER2READ_WRITE_MASK
+    )
+    await receipt_service.create_receipt(db, create_receipt_dto)
