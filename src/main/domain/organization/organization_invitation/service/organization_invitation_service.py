@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from common.database.member_role import MemberRole
 from common.security.member_DTO import MemberDTO
-from domain.organization.joined_organization.dto.create_joined_organization_dto import CreateJoinedOrganizationDto
+from domain.organization.joined_organization.dto import CreateJoinedOrganizationDto
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository
 from domain.organization.organization.entity import Organization
 from domain.organization.organization_invitation.entity import StatusEnum, OrganizationInvitation

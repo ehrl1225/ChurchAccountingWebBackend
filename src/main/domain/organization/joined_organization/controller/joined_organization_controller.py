@@ -3,11 +3,12 @@ from fastapi import APIRouter, Request, Response, Depends, status
 from sqlalchemy.orm import Session
 
 from common.database import get_db
-from common.database.member_role import OWNER2ADMIN_MASK
+from common.database.member_role import OWNER2ADMIN_MASK, OWNER2READ_MASK
 from common.dependency_injector import Container
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.organization.joined_organization.dto import ChangeRoleDto
 from domain.organization.joined_organization.service import JoinedOrganizationService
+from domain.organization.organization.dto.organization_response_dto import OrganizationResponseDto
 
 router = APIRouter(prefix="/joined-organization", tags=["joined-organization"])
 
@@ -30,3 +31,33 @@ async def change_role(
     )
     await joined_organization_service.change_member_role(db, me_dto, organization_id, change_role)
 
+@router.get("/", status_code=status.HTTP_200_OK, response_model=list[OrganizationResponseDto])
+@inject
+async def list_joined_organizations(
+        request: Request,
+        response: Response,
+        db: Session = Depends(get_db),
+        joined_organization_service: JoinedOrganizationService = Depends(Provide[Container.joined_organization_service])
+):
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    result = await joined_organization_service.get_all_joined_organizations(db, me_dto)
+    return result
+
+@router.delete("/{organization_id}/{joined_organization_id}", status_code=status.HTTP_204_NO_CONTENT)
+@inject
+async def delete_joined_organization(
+        request: Request,
+        response: Response,
+        organization_id: int,
+        joined_organization_id: int,
+        db: Session = Depends(get_db),
+        joined_organization_service:JoinedOrganizationService = Depends(Provide[Container.joined_organization_service])
+):
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=organization_id,
+        member_role_mask=OWNER2ADMIN_MASK,
+    )
+    await joined_organization_service.delete_joined_organization(db, joined_organization_id)
