@@ -24,7 +24,7 @@ class MemberRepository:
         db.refresh(member)
         return member
 
-    async def get_member_by_email(self, db:Session, email:str) -> Optional[Member]:
+    async def find_by_email(self, db:Session, email:str) -> Optional[Member]:
         member: Optional[Member]  = db.query(Member).filter_by(email=email).one_or_none()
         return member
 

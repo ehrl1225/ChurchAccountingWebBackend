@@ -33,7 +33,7 @@ class OrganizationInvitationService:
         organization = await self.organization_repository.find_by_id(db, create_invitation_dto.organization_id)
         if not organization:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
-        member = await self.member_repository.get_member_by_email(db, create_invitation_dto.email)
+        member = await self.member_repository.find_by_email(db, create_invitation_dto.email)
         if not member:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
         invitation = await self.organization_invitation_repository.create_invitation(db, organization, member, me_dto.id)
