@@ -6,7 +6,7 @@ from common.security.member_DTO import MemberDTO
 from domain.member.repository import MemberRepository
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository
 from domain.organization.joined_organization.dto import ChangeRoleDto, JoinedOrganizationResponse
-from domain.organization.organization.dto.organization_response_dto import OrganizationResponseDto
+from domain.organization.organization.dto import OrganizationResponseDto
 from domain.organization.organization.repository import OrganizationRepository
 from domain.organization.joined_organization.entity import JoinedOrganization
 from domain.organization.organization.entity import Organization

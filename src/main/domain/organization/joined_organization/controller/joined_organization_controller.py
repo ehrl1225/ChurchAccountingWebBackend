@@ -8,7 +8,7 @@ from common.dependency_injector import Container
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.organization.joined_organization.dto import ChangeRoleDto
 from domain.organization.joined_organization.service import JoinedOrganizationService
-from domain.organization.organization.dto.organization_response_dto import OrganizationResponseDto
+from domain.organization.organization.dto import OrganizationResponseDto
 
 router = APIRouter(prefix="/joined-organization", tags=["joined-organization"])
 

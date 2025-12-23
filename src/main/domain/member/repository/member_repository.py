@@ -44,5 +44,5 @@ class MemberRepository:
             db: Session,
             id: int
     ) -> Optional[Member]:
-        member: Optional[Member] = db.query(Member).get(id)
+        member: Optional[Member] = db.get(Member, id)
         return member

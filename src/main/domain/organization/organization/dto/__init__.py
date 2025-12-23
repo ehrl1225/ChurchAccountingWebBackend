@@ -1,1 +1,2 @@
-from .organization_create_dto import OrganizationCreateDto
+from .organization_request_dto import OrganizationRequestDto
+from .organization_response_dto import OrganizationResponseDto

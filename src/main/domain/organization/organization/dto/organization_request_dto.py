@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-class OrganizationCreateDto(BaseModel):
+class OrganizationRequestDto(BaseModel):
     name: str
     description: str
     start_year: int
