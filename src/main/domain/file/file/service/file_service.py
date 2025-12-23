@@ -2,7 +2,7 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
 from domain.file.file.repository import FileRepository
-from domain.file.file.entity import FileInfo
+
 
 class FileService:
 
