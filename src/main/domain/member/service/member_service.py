@@ -26,12 +26,12 @@ class MemberService:
         )
 
     async def check_email(self, db:Session, email: str) -> bool:
-        if await self.member_repository.get_member_by_email(db, email):
+        if await self.member_repository.find_by_email(db, email):
             return True
         return False
 
     async def verify_password(self, db:Session, login_form: LoginFormDTO) -> Member:
-        member: Optional[Member] = await self.member_repository.get_member_by_email(db, login_form.email)
+        member: Optional[Member] = await self.member_repository.find_by_email(db, login_form.email)
         if member is None:
             raise HTTPException(status_code=400, detail="Incorrect email or password")
         if not verify_password(login_form.password, member.hashed_password):

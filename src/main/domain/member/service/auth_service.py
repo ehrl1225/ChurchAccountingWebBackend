@@ -24,7 +24,7 @@ class AuthService:
         tasks.add_task(send_verify_email, email, verify_url)
 
     async def set_verified(self, db:Session, email:str):
-        member = await self.member_repository.get_member_by_email(db, email)
+        member = await self.member_repository.find_by_email(db, email)
         if member is None:
             raise HTTPException(status_code=404, detail="Member not found")
         await self.member_repository.modify_member_verification(db, member, True)
