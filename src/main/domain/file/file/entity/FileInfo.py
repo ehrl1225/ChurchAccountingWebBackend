@@ -12,4 +12,4 @@ class FileInfo(BaseEntity):
     content_type: Mapped[str] = mapped_column(String, nullable=False)
     file_size: Mapped[int] = mapped_column(Integer, nullable=False)
     file_url: Mapped[str] = mapped_column(String, nullable=False)
-    uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
