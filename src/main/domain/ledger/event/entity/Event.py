@@ -8,10 +8,10 @@ from common.database import BaseEntity
 class Event(BaseEntity):
     __tablename__ = "event"
 
-    name: Mapped[str] = mapped_column(String)
-    start_date: Mapped[date] = mapped_column(Date)
-    end_date: Mapped[date] = mapped_column(Date)
-    description: Mapped[str] = mapped_column(String)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    start_date: Mapped[date] = mapped_column(Date, nullable=False)
+    end_date: Mapped[date] = mapped_column(Date, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=True)
     organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
 

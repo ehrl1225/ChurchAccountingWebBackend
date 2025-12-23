@@ -9,7 +9,7 @@ class OrganizationInvitation(BaseEntity):
 
     organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
     member_id: Mapped[int] = mapped_column(ForeignKey("member.id"), nullable=False)
-    status: Mapped[StatusEnum] = mapped_column(Enum(StatusEnum, name="status_enum"),default=StatusEnum.PENDING)
+    status: Mapped[StatusEnum] = mapped_column(Enum(StatusEnum, name="status_enum"),nullable=False, default=StatusEnum.PENDING)
     invitor_id: Mapped[int] = mapped_column(ForeignKey("member.id"), nullable=False)
 
     organization: Mapped["Organization"] = relationship(

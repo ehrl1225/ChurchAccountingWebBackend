@@ -6,7 +6,7 @@ from common.database import BaseEntity
 class Member(BaseEntity):
     __tablename__ = 'member'
     name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(64))
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
 
