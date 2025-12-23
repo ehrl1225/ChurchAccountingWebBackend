@@ -7,7 +7,7 @@ from domain.ledger.event.repository import EventRepository
 from domain.ledger.receipt.repository import ReceiptRepository
 from domain.member.repository import MemberRepository
 from domain.organization.joined_organization.dto import CreateJoinedOrganizationDto
-from domain.organization.organization.dto import OrganizationCreateDto
+from domain.organization.organization.dto import OrganizationRequestDto
 from domain.organization.organization.repository import OrganizationRepository
 from domain.organization.organization_invitation.entity import StatusEnum, OrganizationInvitation
 from domain.organization.organization_invitation.repository import OrganizationInvitationRepository
@@ -47,7 +47,7 @@ async def init_dev_data():
     for i in range(3):
         organization = await organization_repository.create(
             db=db,
-            organization_create_dto=OrganizationCreateDto(
+            organization_request_dto=OrganizationRequestDto(
                 name=f"organization{i}",
                 description=f"made by user{i}",
                 start_year=2025,

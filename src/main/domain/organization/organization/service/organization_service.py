@@ -6,7 +6,7 @@ from common.security.member_DTO import MemberDTO
 from domain.organization.joined_organization.dto import CreateJoinedOrganizationDto
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository
 from domain.organization.organization.repository import OrganizationRepository
-from domain.organization.organization.dto import OrganizationCreateDto
+from domain.organization.organization.dto import OrganizationRequestDto
 from domain.member.entity import Member
 from domain.member.repository import MemberRepository
 
@@ -23,8 +23,8 @@ class OrganizationService:
         self.joined_organization_repository = joined_organization_repository
         self.member_repository = member_repository
 
-    async def create(self, db:Session, member_dto:MemberDTO, organization_create_dto:OrganizationCreateDto):
-        organization =  await self.organization_repository.create(db, organization_create_dto)
+    async def create(self, db:Session, member_dto:MemberDTO, organization_request_dto:OrganizationRequestDto):
+        organization =  await self.organization_repository.create(db, organization_request_dto)
         member: Member = await self.member_repository.find_by_id(db, member_dto.id)
         if not member:
             raise HTTPException(status_code=400, detail="Member not found")
@@ -34,6 +34,12 @@ class OrganizationService:
             member_role=MemberRole.OWNER,
         ))
         return organization
+
+    async def update(self, db:Session, organization_id:int, organization_request_dto:OrganizationRequestDto):
+        organization = await self.organization_repository.find_by_id(db, organization_id)
+        if not organization:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        await self.organization_repository.update(db, organization, organization_request_dto)
 
     async def delete(self, db:Session, organization_id:int) -> None:
         organization = await self.organization_repository.find_by_id(db, organization_id)
