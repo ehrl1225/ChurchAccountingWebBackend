@@ -49,12 +49,11 @@ async def get_categories(
     )
     return await category_service.find_all(db, search_category)
 
-@router.put("/{category_id}", status_code=status.HTTP_202_ACCEPTED)
+@router.put("/", status_code=status.HTTP_202_ACCEPTED)
 @inject
 async def update_category(
         request: Request,
         response: Response,
-        category_id: int,
         edit_category:EditCategoryDto,
         db: Session = Depends(get_db),
         category_service:CategoryService = Depends(Provide[Container.category_service])
@@ -66,14 +65,13 @@ async def update_category(
         organization_id=edit_category.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK,
     )
-    await category_service.update(db, category_id, edit_category.category_name)
+    await category_service.update(db, edit_category)
 
-@router.delete("/{category_id}", status_code=status.HTTP_202_ACCEPTED)
+@router.delete("/", status_code=status.HTTP_202_ACCEPTED)
 @inject
 async def delete_category(
         request: Request,
         response: Response,
-        category_id: int,
         delete_category: DeleteCategoryDto,
         db: Session = Depends(get_db),
         category_service:CategoryService = Depends(Provide[Container.category_service])
@@ -85,4 +83,4 @@ async def delete_category(
         organization_id=delete_category.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK
     )
-    await category_service.delete(db, category_id)
+    await category_service.delete(db, delete_category.category_id)

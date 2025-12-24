@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from domain.ledger.category.category.dto import CreateCategoryDTO
 from domain.ledger.category.category.dto.category_response_dto import CategoryResponseDto
+from domain.ledger.category.category.dto.edit_category_dto import EditCategoryDto
 from domain.ledger.category.category.dto.search_category_dto import SearchCategoryDto
 from domain.ledger.category.category.entity import Category
 from domain.ledger.category.category.repository import CategoryRepository
@@ -54,11 +55,11 @@ class CategoryService:
             category_dtos.append(category_dto)
         return category_dtos
 
-    async def update(self, db:Session, category_id:int, name:str):
-        category = await self.category_repository.find_category_by_id(db, category_id)
+    async def update(self, db:Session, edit_category_dto:EditCategoryDto):
+        category = await self.category_repository.find_category_by_id(db, edit_category_dto.category_id)
         if not category:
             raise HTTPException(status_code=404, detail="Category not found")
-        await self.category_repository.update_category(db, category, name)
+        await self.category_repository.update_category(db, category, edit_category_dto.category_name)
 
     async def delete(self, db:Session, category_id:int):
         category = await self.category_repository.find_category_by_id(db, category_id)
