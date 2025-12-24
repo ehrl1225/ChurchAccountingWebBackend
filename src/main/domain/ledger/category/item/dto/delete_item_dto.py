@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
-class DeleteCategoryDto(BaseModel):
+class DeleteItemDto(BaseModel):
     organization_id: int
-    category_id: int
+    item_id: int

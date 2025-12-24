@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from domain.ledger.category.item.dto import CreateItemDto
+from domain.ledger.category.item.dto.edit_item_dto import EditItemDto
 from domain.ledger.category.item.repository import ItemRepository
 
 
@@ -17,3 +18,12 @@ class ItemService:
             db,
             create_item_dto
         )
+
+    async def update_item(self, db:Session, edit_item:EditItemDto):
+        item = await self.item_repository.find_item_by_id(db, edit_item.item_id)
+        await self.item_repository.update_item(db, item, edit_item.item_name)
+
+
+    async def delete_item(self, db:Session, item_id:int):
+        item = await self.item_repository.find_item_by_id(db, item_id)
+        await self.item_repository.delete_item(db, item)
