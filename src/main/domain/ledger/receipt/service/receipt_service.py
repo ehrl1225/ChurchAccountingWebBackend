@@ -4,6 +4,10 @@ from domain.ledger.category.category.repository import CategoryRepository
 from domain.ledger.category.item.repository import ItemRepository
 from domain.ledger.event.repository import EventRepository
 from domain.ledger.receipt.dto import CreateReceiptDto
+from domain.ledger.receipt.dto.delete_receipt_dto import DeleteReceiptDto
+from domain.ledger.receipt.dto.edit_receipt_dto import EditReceiptDto
+from domain.ledger.receipt.dto.receipt_response_dto import ReceiptResponseDto
+from domain.ledger.receipt.dto.search_receipt_params import SearchAllReceiptParams
 from domain.ledger.receipt.repository import ReceiptRepository
 from domain.member.repository import MemberRepository
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository
@@ -35,3 +39,18 @@ class ReceiptService:
             db,
             create_receipt_dto
         )
+
+    async def get_all_receipts(self, db:Session, search_receipt_params:SearchAllReceiptParams):
+        receipts = await self.receipt_repository.find_all(
+            db=db,
+            organization_id=search_receipt_params.organization_id,
+            year=search_receipt_params.year,)
+        return [ReceiptResponseDto.model_validate(receipt) for receipt in receipts]
+
+    async def update(self, db:Session, edit_receipt_dto: EditReceiptDto):
+        receipt = await self.receipt_repository.find_by_id(edit_receipt_dto.receipt_id)
+        await self.receipt_repository.update(db, receipt, edit_receipt_dto)
+
+    async def delete(self, db:Session, delete_receipt_dto:DeleteReceiptDto):
+        receipt = await self.receipt_repository.find_by_id(db, delete_receipt_dto.receipt_id)
+        await self.receipt_repository.delete(db, receipt)
