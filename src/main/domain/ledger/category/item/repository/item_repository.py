@@ -2,10 +2,8 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from domain.ledger.category.category.entity import Category
 from domain.ledger.category.item.dto import CreateItemDto
 from domain.ledger.category.item.entity import Item
-from domain.organization.organization.entity import Organization
 
 
 class ItemRepository:
@@ -24,3 +22,12 @@ class ItemRepository:
 
     async def find_item_by_id(self, db:Session, id:int) -> Optional[Item]:
         return db.query(Item).get(id)
+
+    async def update_item(self, db:Session, item:Item, name:str):
+        item.name = name
+        db.flush()
+        db.refresh(item)
+
+    async def delete_item(self, db:Session, item:Item):
+        db.delete(item)
+        db.flush()

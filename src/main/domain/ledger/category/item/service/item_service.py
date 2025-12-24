@@ -1,19 +1,8 @@
-from typing import Optional
-from unicodedata import category
-
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from common.database import MemberRole
-from common.security.member_DTO import MemberDTO
-from domain.organization.joined_organization.repository import JoinedOrganizationRepository
-from domain.organization.organization.entity import Organization
-from domain.ledger.category.category.repository import CategoryRepository
-from domain.organization.joined_organization.entity import JoinedOrganization
 from domain.ledger.category.item.dto import CreateItemDto
+from domain.ledger.category.item.dto.edit_item_dto import EditItemDto
 from domain.ledger.category.item.repository import ItemRepository
-from domain.member.repository import MemberRepository
-from domain.organization.organization.repository import OrganizationRepository
 
 
 class ItemService:
@@ -29,3 +18,12 @@ class ItemService:
             db,
             create_item_dto
         )
+
+    async def update_item(self, db:Session, edit_item:EditItemDto):
+        item = await self.item_repository.find_item_by_id(db, edit_item.item_id)
+        await self.item_repository.update_item(db, item, edit_item.item_name)
+
+
+    async def delete_item(self, db:Session, item_id:int):
+        item = await self.item_repository.find_item_by_id(db, item_id)
+        await self.item_repository.delete_item(db, item)
