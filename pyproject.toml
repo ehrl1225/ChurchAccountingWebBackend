@@ -15,6 +15,7 @@ dependencies = [
     "gunicorn>=23.0.0",
     "httpx>=0.28.1",
     "itsdangerous>=2.2.0",
+    "paginate-sqlalchemy>=0.3.1",
     "passlib[bcrypt]>=1.7.4",
     "psycopg==3.3.2",
     "pydantic-settings>=2.12.0",
