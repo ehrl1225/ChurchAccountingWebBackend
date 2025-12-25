@@ -47,16 +47,16 @@ class JoinedOrganizationService:
             db:Session,
             me_dto:MemberDTO
     ):
-        member = await self.member_repository.find_by_id(db, me_dto.member_id)
+        member = await self.member_repository.find_by_id(db, me_dto.id)
         if not member:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
-        joined_organizations:list[JoinedOrganization] = self.joined_organization_repository.find_all_by_member(db, member.id)
+        joined_organizations:list[JoinedOrganization] = await self.joined_organization_repository.find_all_by_member(db, member.id)
         organizations = []
         for joined_organization in joined_organizations:
             organization:Organization = joined_organization.organization
             organization_dto = OrganizationResponseDto.model_validate(organization)
             members = []
-            joined_members:list[JoinedOrganization] = organization.joined_organization
+            joined_members:list[JoinedOrganization] = organization.joined_organizations
             for joined_member in joined_members:
                 member:Member = joined_member.member
                 joined_member_dto = JoinedOrganizationResponse.model_validate(joined_member)

@@ -53,7 +53,6 @@ async def get_all_receipts(
     return await receipt_service.get_all_receipts(db, params)
 
 @router.get("/summary")
-@inject
 async def get_summary_receipts(
         request: Request,
         response: Response,

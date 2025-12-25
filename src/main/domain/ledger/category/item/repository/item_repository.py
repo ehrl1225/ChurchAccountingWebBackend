@@ -8,7 +8,7 @@ from domain.ledger.category.item.entity import Item
 
 class ItemRepository:
 
-    async def create_item(self, db:Session, create_item_dto:CreateItemDto) -> Item:
+    async def create_item(self, db:Session, create_item_dto:CreateItemDto):
         item = Item(
             name=create_item_dto.item_name,
             organization_id=create_item_dto.organization_id,

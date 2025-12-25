@@ -19,7 +19,7 @@ class Organization(BaseEntity):
         "OrganizationInvitation",
         back_populates="organization",
     )
-    joined_organization: Mapped[list["JoinedOrganization"]] = relationship(
+    joined_organizations: Mapped[list["JoinedOrganization"]] = relationship(
         "JoinedOrganization",
         back_populates="organization",
     )

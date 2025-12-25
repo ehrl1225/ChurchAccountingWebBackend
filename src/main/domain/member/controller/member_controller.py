@@ -6,6 +6,7 @@ from common.database import get_db
 from common.dependency_injector import Container
 from common.security.email_token import verify_token
 from common.env import settings
+from common.security.member_DTO import MemberDTO
 from domain.member.dto import RegisterFormDTO, LoginFormDTO
 from domain.member.service import MemberService
 from domain.member.service.auth_service import AuthService
@@ -29,7 +30,7 @@ async def register_member(
     await member_service.add_member(db, registerForm)
     # await auth_service.send_email_verification(email,tasks)
 
-@router.post("/login", status_code=status.HTTP_200_OK)
+@router.post("/login", status_code=status.HTTP_200_OK, response_model=MemberDTO)
 @inject
 async def login_member(
         loginForm: LoginFormDTO,
@@ -41,6 +42,7 @@ async def login_member(
 ):
     member = await member_service.verify_password(db, loginForm)
     await auth_service.create_token(db, member,request, response)
+    return member
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout_member(
@@ -61,8 +63,7 @@ async def verify_email(
     await auth_service.set_verified(db,subject)
 
 
-
-@router.get("/me", status_code=status.HTTP_200_OK)
+@router.get("/me", status_code=status.HTTP_200_OK, response_model=MemberDTO)
 async def me(
         request: Request,
         response:Response,

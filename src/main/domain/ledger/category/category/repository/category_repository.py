@@ -11,7 +11,7 @@ from typing import Optional
 
 class CategoryRepository:
 
-    async def create_category(self, db:Session, create_category_dto:CreateCategoryDTO) -> Category:
+    async def create_category(self, db:Session, create_category_dto:CreateCategoryDTO):
         category = Category(
             name=create_category_dto.category_name,
             tx_type=create_category_dto.tx_type,

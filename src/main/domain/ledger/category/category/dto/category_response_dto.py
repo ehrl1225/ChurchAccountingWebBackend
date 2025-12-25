@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
 
 from common.database import TxType
 from domain.ledger.category.item.dto.item_response_dto import ItemResponseDto
@@ -7,4 +9,6 @@ from domain.ledger.category.item.dto.item_response_dto import ItemResponseDto
 class CategoryResponseDto(BaseModel):
     id: int
     name: str
-    items: list[ItemResponseDto]
+    items: list[ItemResponseDto] = []
+
+    model_config = ConfigDict(from_attributes=True)

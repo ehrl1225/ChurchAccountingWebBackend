@@ -15,9 +15,9 @@ class JoinedOrganization(BaseEntity):
 
     organization: Mapped["Organization"] = relationship(
         "Organization",
-        back_populates="joined_organization"
+        back_populates="joined_organizations"
     )
     member: Mapped["Member"] = relationship(
         "Member",
-        back_populates="joined_organization"
+        back_populates="joined_organizations"
     )

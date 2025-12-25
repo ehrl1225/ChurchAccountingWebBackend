@@ -19,7 +19,7 @@ class Member(BaseEntity):
         primaryjoin="Member.id == OrganizationInvitation.member_id",
         back_populates="member",
     )
-    joined_organization: Mapped[list["JoinedOrganization"]] = relationship(
+    joined_organizations: Mapped[list["JoinedOrganization"]] = relationship(
         "JoinedOrganization",
         back_populates="member",
     )

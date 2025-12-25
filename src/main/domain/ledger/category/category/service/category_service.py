@@ -50,7 +50,7 @@ class CategoryService:
             item_dtos = []
             for item in items:
                 item_dto = ItemResponseDto.model_validate(item)
-                item_dtos.append(ItemResponseDto.model_validate(item_dto))
+                item_dtos.append(item_dto)
             category_dto.items = item_dtos
             category_dtos.append(category_dto)
         return category_dtos

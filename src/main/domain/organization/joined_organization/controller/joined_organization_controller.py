@@ -1,8 +1,8 @@
 from dependency_injector.wiring import inject, Provide
-from fastapi import APIRouter, Request, Response, Depends, status
+from fastapi import APIRouter, Request, Response, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 
-from common.database import get_db
+from common.database import get_db, MemberRole
 from common.database.member_role import OWNER2ADMIN_MASK, OWNER2READ_MASK
 from common.dependency_injector import Container
 from common.security.rq import get_current_user_from_cookie, check_member_role
@@ -29,7 +29,9 @@ async def change_role(
         organization_id=organization_id,
         member_role_mask=OWNER2ADMIN_MASK,
     )
-    await joined_organization_service.change_member_role(db, me_dto, organization_id, change_role)
+    if change_role.member_role == MemberRole.OWNER:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    await joined_organization_service.change_member_role(db, organization_id, change_role)
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=list[OrganizationResponseDto])
 @inject

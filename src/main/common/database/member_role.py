@@ -1,7 +1,7 @@
 from enum import Enum
 from functools import cache
 
-class MemberRole(Enum):
+class MemberRole(str, Enum):
     READ_ONLY = "READ_ONLY"
     READ_WRITE = "READ_WRITE"
     ADMIN = "ADMIN"
