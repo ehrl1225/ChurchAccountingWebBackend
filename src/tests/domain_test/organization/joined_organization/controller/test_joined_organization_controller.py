@@ -13,7 +13,7 @@ def test_change_role(client: TestClient):
     response = client.put("/joined-organization/1", json=ChangeRoleDto(
         member_id=3,
         member_role=MemberRole.ADMIN,
-    ).model_dump())
+    ).model_dump(mode="json"))
     assert response.status_code == status.HTTP_200_OK
 
 def test_get_all(client: TestClient):

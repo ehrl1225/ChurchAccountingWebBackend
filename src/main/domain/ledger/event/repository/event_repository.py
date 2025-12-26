@@ -30,7 +30,7 @@ class EventRepository:
         return event
 
     async def find_event_by_id(self, db:Session, id:int) -> Optional[Event]:
-        return db.query(Event).get(id)
+        return db.get(Event, id)
 
     async def find_all(self, db:Session, organization_id:int, year:int) -> list[Event]:
         events = (db

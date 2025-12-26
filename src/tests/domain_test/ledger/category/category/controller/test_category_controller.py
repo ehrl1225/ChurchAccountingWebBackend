@@ -16,7 +16,7 @@ def test_create_category(client: TestClient):
         tx_type=TxType.INCOME,
         organization_id=1,
         year=2020
-    ).model_dump())
+    ).model_dump(mode="json"))
     assert response.status_code == status.HTTP_201_CREATED
 
 def test_get_categories(client: TestClient):
@@ -34,7 +34,7 @@ def test_update_category(client: TestClient):
         organization_id=1,
         category_id=1,
         category_name="test_category"
-    ).model_dump())
+    ).model_dump(mode="json"))
     assert response.status_code == status.HTTP_202_ACCEPTED
 
 def test_delete_category(client: TestClient):

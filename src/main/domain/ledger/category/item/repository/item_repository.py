@@ -21,7 +21,7 @@ class ItemRepository:
         return item
 
     async def find_item_by_id(self, db:Session, id:int) -> Optional[Item]:
-        return db.query(Item).get(id)
+        return db.get(Item, id)
 
     async def update_item(self, db:Session, item:Item, name:str):
         item.name = name

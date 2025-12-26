@@ -1,6 +1,6 @@
 from fastapi import Query
 
-class DeleteItemDto:
+class DeleteItemParams:
     organization_id: int
     item_id: int
 

@@ -15,7 +15,7 @@ def test_create_organization(client: TestClient):
         description="description1",
         start_year=2020,
         end_year=2020
-    ).model_dump())
+    ).model_dump(mode="json"))
     assert response.status_code == status.HTTP_201_CREATED
 
 
@@ -29,7 +29,7 @@ def test_update_organization(client: TestClient):
         description="description-1",
         start_year=2020,
         end_year=2020
-    ).model_dump())
+    ).model_dump(mode="json"))
     assert response.status_code == status.HTTP_202_ACCEPTED
 
 def test_delete_organization(client: TestClient):

@@ -1,5 +1,5 @@
 from enum import Enum
 
-class TxType(str, Enum):
+class TxType(Enum):
     INCOME = "INCOME"
     OUTCOME = "OUTCOME"
