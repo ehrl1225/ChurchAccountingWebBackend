@@ -8,7 +8,7 @@ from common.database.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
 from common.dependency_injector import Container
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.ledger.receipt.dto import CreateReceiptDto
-from domain.ledger.receipt.dto.delete_receipt_dto import DeleteReceiptDto
+from domain.ledger.receipt.dto.delete_receipt_params import DeleteReceiptParams
 from domain.ledger.receipt.dto.edit_receipt_dto import EditReceiptDto
 from domain.ledger.receipt.dto.search_receipt_params import SearchAllReceiptParams
 from domain.ledger.receipt.service import ReceiptService
@@ -82,7 +82,7 @@ async def update_receipt(
 async def delete_receipt(
         request: Request,
         response: Response,
-        delete_receipt_dto: DeleteReceiptDto,
+        delete_receipt_params: Annotated[DeleteReceiptParams, Depends()],
         db:Session = Depends(get_db),
         receipt_service: ReceiptService = Depends(Provide[Container.receipt_service])
 ):
@@ -90,7 +90,7 @@ async def delete_receipt(
     await check_member_role(
         db=db,
         member_id=me_dto.id,
-        organization_id=delete_receipt_dto.organization_id,
+        organization_id=delete_receipt_params.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK
     )
-    await receipt_service.delete(db, delete_receipt_dto)
+    await receipt_service.delete(db, delete_receipt_params)

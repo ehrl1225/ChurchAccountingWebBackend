@@ -39,7 +39,7 @@ class ReceiptRepository:
         return receipt
 
     async def find_by_id(self, db:Session, receipt_id:int):
-        receipt = db.query(Receipt).get(receipt_id)
+        receipt = db.get(Receipt, receipt_id)
         return receipt
 
     async def find_all(self, db:Session, organization_id: int, year:int) -> list[Receipt]:
