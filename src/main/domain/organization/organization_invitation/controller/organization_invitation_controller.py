@@ -25,6 +25,8 @@ async def create_organization_invitation(
         organization_invitation_service:OrganizationInvitationService =  Depends(Provide[Container.organization_invitation_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
+    if organization_invitation_dto.email == me_dto.email:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     await check_member_role(
         db=db,
         member_id=me_dto.id,

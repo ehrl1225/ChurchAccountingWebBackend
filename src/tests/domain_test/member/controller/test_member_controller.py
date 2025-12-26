@@ -3,8 +3,9 @@ from fastapi import status
 
 from domain.member.dto import RegisterFormDTO, LoginFormDTO
 
-
-# 성공 케이스
+"""
+성공 케이스
+"""
 
 def test_register_member(client: TestClient):
     response = client.post("/member/register", json=RegisterFormDTO(
@@ -44,7 +45,9 @@ def test_me(client: TestClient):
     response = client.get("/member/me")
     assert response.status_code == status.HTTP_200_OK
 
-# 실패 케이스
+"""
+실패 케이스
+"""
 
 # not email type
 def test_register_fail1(client: TestClient):
