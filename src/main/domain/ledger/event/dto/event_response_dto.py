@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
 from datetime import date
 
 class EventResponseDTO(BaseModel):
@@ -6,4 +8,6 @@ class EventResponseDTO(BaseModel):
     name: str
     start_date: date
     end_date: date
-    description: str
+    description: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)

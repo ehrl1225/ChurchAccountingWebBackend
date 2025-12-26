@@ -8,7 +8,7 @@ from common.database.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
 from common.dependency_injector import Container
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.ledger.event.dto import CreateEventDTO
-from domain.ledger.event.dto.delete_event_dto import DeleteEventDto
+from domain.ledger.event.dto.delete_event_params import DeleteEventParams
 from domain.ledger.event.dto.edit_event_dto import EditEventDto
 from domain.ledger.event.dto.search_event_params import SearchEventParams
 from domain.ledger.event.service import EventService
@@ -78,7 +78,7 @@ async def update_event(
 async def delete_event(
         request:Request,
         response:Response,
-        delete_event_dto:DeleteEventDto,
+        delete_event_params:Annotated[DeleteEventParams, Depends()],
         db:Session = Depends(get_db),
         event_service:EventService = Depends(Provide[Container.event_service])
 ):
@@ -86,7 +86,7 @@ async def delete_event(
     await check_member_role(
         db=db,
         member_id=me_dto.id,
-        organization_id=delete_event_dto.organization_id,
+        organization_id=delete_event_params.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK
     )
-    await event_service.delete(db, delete_event_dto)
+    await event_service.delete(db, delete_event_params)

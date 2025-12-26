@@ -23,6 +23,7 @@ def decode_token(token:str) -> dict:
 def member_to_dict(member: Member, scope: str, jti: str) -> dict:
     return {
         "id": member.id,
+        "name": member.name,
         "email": member.email,
         "scope": scope,
         "jti": jti
@@ -30,6 +31,8 @@ def member_to_dict(member: Member, scope: str, jti: str) -> dict:
 
 def dict_to_member(member: dict) -> MemberDTO:
     if "id" not in member:
+        raise HTTPException(status_code=404, detail="Invalid token")
+    if "name" not in member:
         raise HTTPException(status_code=404, detail="Invalid token")
     if "email" not in member:
         raise HTTPException(status_code=404, detail="Invalid token")

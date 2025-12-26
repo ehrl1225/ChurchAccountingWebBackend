@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from common.database import MemberRole
@@ -24,6 +24,8 @@ class OrganizationService:
         self.member_repository = member_repository
 
     async def create(self, db:Session, member_dto:MemberDTO, organization_request_dto:OrganizationRequestDto):
+        if not organization_request_dto.start_year <= organization_request_dto.end_year:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Organization end year must be greater than the start year")
         organization =  await self.organization_repository.create(db, organization_request_dto)
         member: Member = await self.member_repository.find_by_id(db, member_dto.id)
         if not member:
@@ -36,6 +38,8 @@ class OrganizationService:
         return organization
 
     async def update(self, db:Session, organization_id:int, organization_request_dto:OrganizationRequestDto):
+        if not organization_request_dto.start_year <= organization_request_dto.end_year:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Organization end year must be greater than the start year")
         organization = await self.organization_repository.find_by_id(db, organization_id)
         if not organization:
             raise HTTPException(status_code=404, detail="Organization not found")

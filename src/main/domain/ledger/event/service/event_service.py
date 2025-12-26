@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from domain.ledger.event.dto import CreateEventDTO
-from domain.ledger.event.dto.delete_event_dto import DeleteEventDto
+from domain.ledger.event.dto.delete_event_params import DeleteEventParams
 from domain.ledger.event.dto.edit_event_dto import EditEventDto
 from domain.ledger.event.dto.event_response_dto import EventResponseDTO
 from domain.ledger.event.dto.search_event_params import SearchEventParams
@@ -31,6 +31,6 @@ class EventService:
         event = await self.event_repository.find_event_by_id(db, id=edit_event_dto.event_id)
         await self.event_repository.update(db, event, edit_event_dto)
 
-    async def delete(self, db:Session, delete_event_dto:DeleteEventDto):
+    async def delete(self, db:Session, delete_event_dto:DeleteEventParams):
         event = await self.event_repository.find_event_by_id(db, id=delete_event_dto.event_id)
         await self.event_repository.delete(db, event)

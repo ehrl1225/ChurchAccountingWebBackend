@@ -13,7 +13,7 @@ from domain.organization.organization_invitation.service import OrganizationInvi
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.organization.organization_invitation.dto import OrganizationInvitationResponseDto
 
-router = APIRouter(prefix="/organization/invitation", tags=["Organization Invitation"])
+router = APIRouter(prefix="/organization-invitation", tags=["Organization Invitation"])
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 @inject
@@ -25,6 +25,8 @@ async def create_organization_invitation(
         organization_invitation_service:OrganizationInvitationService =  Depends(Provide[Container.organization_invitation_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
+    if organization_invitation_dto.email == me_dto.email:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     await check_member_role(
         db=db,
         member_id=me_dto.id,

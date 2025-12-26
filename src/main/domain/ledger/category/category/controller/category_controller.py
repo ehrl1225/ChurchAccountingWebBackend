@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
@@ -7,7 +9,7 @@ from common.database import get_db
 from common.dependency_injector import Container
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from common.database.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
-from domain.ledger.category.category.dto import CreateCategoryDTO, SearchCategoryDto, DeleteCategoryDto
+from domain.ledger.category.category.dto import CreateCategoryDTO, SearchCategoryParams, DeleteCategoryParams
 from domain.ledger.category.category.dto.edit_category_dto import EditCategoryDto
 from domain.ledger.category.category.service import CategoryService
 
@@ -36,7 +38,7 @@ async def create_category(
 async def get_categories(
         request: Request,
         response: Response,
-        search_category: SearchCategoryDto,
+        search_category: Annotated[SearchCategoryParams, Depends()],
         db: Session = Depends(get_db),
         category_service:CategoryService = Depends(Provide[Container.category_service])
 ):
@@ -72,7 +74,7 @@ async def update_category(
 async def delete_category(
         request: Request,
         response: Response,
-        delete_category: DeleteCategoryDto,
+        delete_category: Annotated[DeleteCategoryParams, Depends()],
         db: Session = Depends(get_db),
         category_service:CategoryService = Depends(Provide[Container.category_service])
 ):

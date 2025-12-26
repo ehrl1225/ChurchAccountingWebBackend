@@ -74,6 +74,6 @@ async def check_member_role(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
     joined_organization:JoinedOrganization = await joined_organization_repository.find_by_member_and_organization(db, member, organization)
     if not joined_organization:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member didn't joined organization")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Member didn't joined organization")
     if joined_organization.member_role not in member_roles:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member role not exist")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Member role not exist")

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from domain.ledger.category.category.dto import CreateCategoryDTO
 from domain.ledger.category.category.dto.category_response_dto import CategoryResponseDto
 from domain.ledger.category.category.dto.edit_category_dto import EditCategoryDto
-from domain.ledger.category.category.dto.search_category_dto import SearchCategoryDto
+from domain.ledger.category.category.dto.search_category_params import SearchCategoryParams
 from domain.ledger.category.category.entity import Category
 from domain.ledger.category.category.repository import CategoryRepository
 from domain.ledger.category.item.dto import CreateItemDto
@@ -41,7 +41,7 @@ class CategoryService:
         )
         return category
 
-    async def find_all(self, db:Session, search_category_dto:SearchCategoryDto):
+    async def find_all(self, db:Session, search_category_dto:SearchCategoryParams):
         categories = await self.category_repository.find_all(db=db, search_category_dto=search_category_dto)
         category_dtos = []
         for category in categories:
@@ -50,7 +50,7 @@ class CategoryService:
             item_dtos = []
             for item in items:
                 item_dto = ItemResponseDto.model_validate(item)
-                item_dtos.append(ItemResponseDto.model_validate(item_dto))
+                item_dtos.append(item_dto)
             category_dto.items = item_dtos
             category_dtos.append(category_dto)
         return category_dtos

@@ -34,7 +34,7 @@ class OrganizationInvitationRepository:
         return organization_invitation
 
     async def find_by_id(self, db:Session, id:int) -> Optional[OrganizationInvitation]:
-        return db.query(OrganizationInvitation).get(id)
+        return db.get(OrganizationInvitation, id)
 
     async def find_pending_by_member_id(self, db:Session, member_id:int) -> list[OrganizationInvitation]:
-        return db.query(OrganizationInvitation).filter(and_(OrganizationInvitation.member_id==member_id, OrganizationInvitation.status==StatusEnum.PENDING)).all()
+        return db.query(OrganizationInvitation).filter(OrganizationInvitation.member_id==member_id).all()

@@ -9,7 +9,7 @@ from typing import Optional
 
 class OrganizationRepository:
 
-    async def create(self, db: Session, organization_request_dto: OrganizationRequestDto):
+    async def create(self, db: Session, organization_request_dto: OrganizationRequestDto) -> Organization:
         organization = Organization(
             name=organization_request_dto.name,
             description=organization_request_dto.description,
@@ -22,7 +22,7 @@ class OrganizationRepository:
         return organization
 
     async def find_by_id(self, db: Session, id: int) -> Optional[Organization]:
-        organization = db.query(Organization).get(id)
+        organization = db.get(Organization, id)
         return organization
 
     async def update(self, db:Session, organization:Organization, organization_request_dto:OrganizationRequestDto) -> None:

@@ -8,7 +8,7 @@ from domain.ledger.category.item.entity import Item
 
 class ItemRepository:
 
-    async def create_item(self, db:Session, create_item_dto:CreateItemDto) -> Item:
+    async def create_item(self, db:Session, create_item_dto:CreateItemDto):
         item = Item(
             name=create_item_dto.item_name,
             organization_id=create_item_dto.organization_id,
@@ -21,7 +21,7 @@ class ItemRepository:
         return item
 
     async def find_item_by_id(self, db:Session, id:int) -> Optional[Item]:
-        return db.query(Item).get(id)
+        return db.get(Item, id)
 
     async def update_item(self, db:Session, item:Item, name:str):
         item.name = name
