@@ -37,7 +37,7 @@ class JoinedOrganizationRepository:
         return joined_organization
 
     async def find_by_id(self, db: Session, id: int) -> Optional[JoinedOrganization]:
-        return db.query(JoinedOrganization).get(id)
+        return db.get(JoinedOrganization, id)
 
     async def change_member_role(self, db: Session, joined_organization: JoinedOrganization, member_role: MemberRole):
         joined_organization.member_role = member_role

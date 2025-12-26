@@ -59,7 +59,8 @@ class OrganizationInvitationService:
 
     async def get_invitations(self, db:Session, me_dto:MemberDTO) -> list[OrganizationInvitationResponseDto]:
         invitation_dto_list:list[OrganizationInvitationResponseDto] = []
-        for organization_invitation in await self.organization_invitation_repository.find_pending_by_member_id(db, me_dto.id):
+        invitations = await self.organization_invitation_repository.find_pending_by_member_id(db, me_dto.id)
+        for organization_invitation in invitations:
             invitor:Member = organization_invitation.invitor
             organization: Organization = organization_invitation.organization
             invitation_dto_list.append(

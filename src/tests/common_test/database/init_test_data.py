@@ -34,7 +34,7 @@ async def init_test_database(db:Session):
     organization_invitation_repository = OrganizationInvitationRepository()
     joined_organization_repository = JoinedOrganizationRepository()
 
-    category_names = ["a", "b", "c"]
+    category_names = ["a", "b", "c", "d"]
     item_names = [
         ["a_a", "a_b", "a_c"],
         ["b_a", "b_b", "b_c"],
@@ -83,7 +83,7 @@ async def init_test_database(db:Session):
             )
         )
         organizations_invitations = []
-        for j in range(10):
+        for j in range(5):
             if i==j:
                 continue
             invite_user = users[j]
@@ -146,6 +146,8 @@ async def init_test_database(db:Session):
                     year=2025,
                 )
             )
+            if category_index == 3:
+                continue
             for item_name in item_names[category_index]:
                 item = await item_repository.create_item(
                     db=db,

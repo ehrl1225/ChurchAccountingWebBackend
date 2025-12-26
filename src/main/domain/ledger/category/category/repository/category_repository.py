@@ -3,7 +3,7 @@ from sqlalchemy.sql.operators import and_
 
 from common.database import TxType
 from domain.ledger.category.category.dto import CreateCategoryDTO
-from domain.ledger.category.category.dto.search_category_dto import SearchCategoryDto
+from domain.ledger.category.category.dto.search_category_params import SearchCategoryParams
 from domain.ledger.category.category.entity import Category
 from domain.organization.organization.entity import Organization
 from typing import Optional
@@ -24,15 +24,15 @@ class CategoryRepository:
         return category
 
     async def find_category_by_id(self, db:Session, id:int) -> Optional[Category]:
-        return db.query(Category).get(id)
+        return db.get(Category, id)
 
-    async def find_all(self, db: Session, search_category_dto:SearchCategoryDto) -> list[Category]:
+    async def find_all(self, db: Session, search_category_dto:SearchCategoryParams) -> list[Category]:
         categories = (db
                       .query(Category)
-                      .filter(and_(Category.organization_id==search_category_dto.organization_id,
-                                   Category.year==search_category_dto.year,
-                                   Category.tx_type==search_category_dto.tx_type))
-        ).all()
+                      .filter(Category.organization_id==search_category_dto.organization_id,)
+                      .filter(Category.year==search_category_dto.year)
+                      .filter(Category.tx_type==search_category_dto.tx_type)
+        .all())
         return categories
 
     async def update_category(self, db: Session, category:Category, name:str):

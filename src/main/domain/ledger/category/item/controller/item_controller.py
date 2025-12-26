@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
@@ -55,7 +57,7 @@ async def update_item(
 async def delete_item(
         request: Request,
         response: Response,
-        delete_item_dto:DeleteItemDto,
+        delete_item_dto:Annotated[DeleteItemDto, Depends()],
         db: Session = Depends(get_db),
         item_service: ItemService = Depends(Provide[Container.item_service]),
 ):

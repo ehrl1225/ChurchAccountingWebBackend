@@ -20,3 +20,8 @@ def test_get_all(client: TestClient):
     login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
     response = client.get("/joined-organization")
     assert response.status_code == status.HTTP_200_OK
+
+def test_delete_joined_organization(client: TestClient):
+    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = client.delete("/joined-organization/1/2")
+    assert response.status_code == status.HTTP_204_NO_CONTENT

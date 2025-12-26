@@ -13,7 +13,7 @@ from domain.organization.organization_invitation.service import OrganizationInvi
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.organization.organization_invitation.dto import OrganizationInvitationResponseDto
 
-router = APIRouter(prefix="/organization/invitation", tags=["Organization Invitation"])
+router = APIRouter(prefix="/organization-invitation", tags=["Organization Invitation"])
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 @inject
