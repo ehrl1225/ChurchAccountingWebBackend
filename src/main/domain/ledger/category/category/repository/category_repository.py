@@ -23,7 +23,7 @@ class CategoryRepository:
         db.refresh(category)
         return category
 
-    async def find_category_by_id(self, db:Session, id:int) -> Optional[Category]:
+    async def find_by_id(self, db:Session, id:int) -> Optional[Category]:
         return db.get(Category, id)
 
     async def find_by_organization_and_id(self, db:Session, organization_id:int, id:int) -> Optional[Category]:

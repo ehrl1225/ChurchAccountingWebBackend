@@ -66,4 +66,4 @@ async def delete_item(
         organization_id=delete_item_param.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK,
     )
-    await item_service.delete_item(db, delete_item_param.item_id)
+    await item_service.delete_item(db, delete_item_param)

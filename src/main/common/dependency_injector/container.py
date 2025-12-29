@@ -79,7 +79,9 @@ class Container(containers.DeclarativeContainer):
     )
     item_service:ItemService = providers.Singleton(
         ItemService,
+        category_repository,
         item_repository,
+        organization_repository,
     )
     event_service:EventService = providers.Singleton(
         EventService,
