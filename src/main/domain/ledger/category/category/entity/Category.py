@@ -12,7 +12,9 @@ class Category(BaseEntity):
 
     items: Mapped[list["Item"]] = relationship(
         "Item",
-        back_populates="category"
+        back_populates="category",
+        cascade="all, delete-orphan",
+        passive_deletes=True
     )
     receipts: Mapped[list["Receipt"]] = relationship(
         "Receipt",

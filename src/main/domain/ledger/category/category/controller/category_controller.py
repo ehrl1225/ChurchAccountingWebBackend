@@ -85,4 +85,4 @@ async def delete_category(
         organization_id=delete_category.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK
     )
-    await category_service.delete(db, delete_category.category_id)
+    await category_service.delete(db, delete_category)

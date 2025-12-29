@@ -5,6 +5,9 @@ from common_test.security import login
 from domain.ledger.category.item.dto import CreateItemDto, EditItemDto
 from domain.member.dto import LoginFormDTO
 
+"""
+성공 케이스
+"""
 
 def test_create_item(client: TestClient):
     login(client, LoginFormDTO(email='test_user0@user.com', password='password'))
@@ -32,3 +35,8 @@ def test_delete_item(client: TestClient):
         "item_id":3
     })
     assert response.status_code == status.HTTP_204_NO_CONTENT
+
+"""
+실패 케이스
+"""
+

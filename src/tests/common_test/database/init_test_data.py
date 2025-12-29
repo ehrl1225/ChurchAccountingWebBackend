@@ -158,6 +158,8 @@ async def init_test_database(db:Session):
                         year=2025,
                     )
                 )
+                if category_index == 2:
+                    continue
                 if item_index == 2:
                     continue
                 await receipt_repository.create_receipt(

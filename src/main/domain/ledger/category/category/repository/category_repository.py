@@ -26,13 +26,20 @@ class CategoryRepository:
     async def find_category_by_id(self, db:Session, id:int) -> Optional[Category]:
         return db.get(Category, id)
 
+    async def find_by_organization_and_id(self, db:Session, organization_id:int, id:int) -> Optional[Category]:
+        return (db
+                .query(Category)
+                .filter(Category.id==id)
+                .filter(Category.organization_id==organization_id)
+                .one_or_none())
+
     async def find_all(self, db: Session, search_category_dto:SearchCategoryParams) -> list[Category]:
         categories = (db
                       .query(Category)
                       .filter(Category.organization_id==search_category_dto.organization_id,)
                       .filter(Category.year==search_category_dto.year)
                       .filter(Category.tx_type==search_category_dto.tx_type)
-        .all())
+                      .all())
         return categories
 
     async def update_category(self, db: Session, category:Category, name:str):

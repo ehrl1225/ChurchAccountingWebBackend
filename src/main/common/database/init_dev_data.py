@@ -147,7 +147,7 @@ async def init_dev_data():
                     year=2025
                 )
             )
-            for item_name in item_names[category_index]:
+            for item_index, item_name in enumerate(item_names[category_index]):
                 item = await item_repository.create_item(
                     db=db,
                     create_item_dto=CreateItemDto(
@@ -157,6 +157,8 @@ async def init_dev_data():
                         year=2025
                     )
                 )
+                if item_index==2:
+                    continue
                 await receipt_repository.create_receipt(
                     db=db,
                     create_receipt_dto=CreateReceiptDto(
