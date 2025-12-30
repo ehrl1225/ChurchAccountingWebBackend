@@ -86,6 +86,7 @@ class Container(containers.DeclarativeContainer):
     event_service:EventService = providers.Singleton(
         EventService,
         event_repository,
+        organization_repository
     )
     receipt_service:ReceiptService = providers.Singleton(
         ReceiptService,

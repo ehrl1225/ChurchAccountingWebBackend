@@ -92,6 +92,17 @@ def test_create_item_fail5(client: TestClient):
     ).model_dump(mode="json"))
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
+# wrong year
+def test_create_item_fail6(client: TestClient):
+    login(client, LoginFormDTO(email='test_user0@user.com', password='password'))
+    response = client.post("/ledger/item", json=CreateItemDto(
+        category_id=100,
+        item_name='Test Item',
+        organization_id=1,
+        year=2000
+    ).model_dump(mode="json"))
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
 # not exist item id
 def test_update_item_fail1(client: TestClient):
     login(client, LoginFormDTO(email='test_user0@user.com', password='password'))

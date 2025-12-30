@@ -129,8 +129,8 @@ async def init_test_database(db:Session):
                     organization_id=organization.id,
                     year=2025,
                     name=event_name,
-                    start_date=date.today(),
-                    end_date=date.today()+timedelta(days=1),
+                    start_date=date(year=2025, month=1, day=1),
+                    end_date=date(year=2025, month=1, day=2),
                     description=f"description{i}",
                 )
             )
@@ -166,7 +166,7 @@ async def init_test_database(db:Session):
                     db=db,
                     create_receipt_dto=CreateReceiptDto(
                         receipt_image_url=None,
-                        paper_date=date.today(),
+                        paper_date=date(year=2025, month=1, day=1),
                         actual_date=None,
                         name=f"receipt_{i}",
                         tx_type=TxType.INCOME,

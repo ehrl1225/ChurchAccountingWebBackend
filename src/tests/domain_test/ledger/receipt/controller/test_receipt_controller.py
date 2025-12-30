@@ -13,7 +13,7 @@ def test_create_receipt(client: TestClient):
     login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
     response = client.post("/ledger/receipt", json=CreateReceiptDto(
         receipt_image_url=None,
-        paper_date=date.today(),
+        paper_date=date(year=2025, month=1, day=1),
         actual_date=None,
         name="receipt",
         tx_type=TxType.INCOME,
@@ -42,7 +42,7 @@ def test_update_receipt(client: TestClient):
         receipt_id=1,
         name="receipt",
         receipt_image_url=None,
-        paper_date=date.today(),
+        paper_date=date(year=2025, month=1, day=1),
         actual_date=None,
         tx_type=TxType.INCOME,
         amount=100,
