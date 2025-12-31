@@ -130,8 +130,8 @@ async def init_dev_data():
                     organization_id=organization.id,
                     year=2025,
                     name=event_name,
-                    start_date=date.today(),
-                    end_date=date.today()+timedelta(days=1),
+                    start_date=date(year=2025, month=1, day=1),
+                    end_date=date(year=2025, month=1, day=2),
                     description=f"made by user{i}",
                 )
             )
@@ -147,7 +147,7 @@ async def init_dev_data():
                     year=2025
                 )
             )
-            for item_name in item_names[category_index]:
+            for item_index, item_name in enumerate(item_names[category_index]):
                 item = await item_repository.create_item(
                     db=db,
                     create_item_dto=CreateItemDto(
@@ -157,11 +157,13 @@ async def init_dev_data():
                         year=2025
                     )
                 )
+                if item_index==2:
+                    continue
                 await receipt_repository.create_receipt(
                     db=db,
                     create_receipt_dto=CreateReceiptDto(
                         receipt_image_url=None,
-                        paper_date=date.today(),
+                        paper_date=date(year=2025, month=1, day=1),
                         actual_date=None,
                         name=f"aaa",
                         tx_type=TxType.INCOME,

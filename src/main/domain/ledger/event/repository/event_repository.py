@@ -29,8 +29,15 @@ class EventRepository:
         db.refresh(event)
         return event
 
-    async def find_event_by_id(self, db:Session, id:int) -> Optional[Event]:
+    async def find_by_id(self, db:Session, id:int) -> Optional[Event]:
         return db.get(Event, id)
+
+    async def find_by_organization_and_id(self, db:Session, organization_id:int, event_id:int) -> Optional[Event]:
+        return (db
+                .query(Event)
+                .filter(Event.organization_id == organization_id)
+                .filter(Event.id == event_id)
+                .one_or_none())
 
     async def find_all(self, db:Session, organization_id:int, year:int) -> list[Event]:
         events = (db

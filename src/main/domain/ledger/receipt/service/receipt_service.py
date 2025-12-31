@@ -1,5 +1,7 @@
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from common.database import TxType
 from domain.ledger.category.category.repository import CategoryRepository
 from domain.ledger.category.item.repository import ItemRepository
 from domain.ledger.event.repository import EventRepository
@@ -35,12 +37,56 @@ class ReceiptService:
         self.joined_organization_repository = joined_organization_repository
 
     async def create_receipt(self, db:Session, create_receipt_dto:CreateReceiptDto):
+        # verify
+        if create_receipt_dto.tx_type == TxType.INCOME and create_receipt_dto.amount < 0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Income transaction must be greater than 0")
+        if create_receipt_dto.tx_type == TxType.OUTCOME and create_receipt_dto.amount > 0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Outcome must not be greater than 0")
+
+        organization = await self.organization_repository.find_by_id(db, create_receipt_dto.organization_id)
+        if organization is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
+        if not organization.start_year <= create_receipt_dto.year <= organization.end_year:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Organization start year must be in range")
+        category = await self.category_repository.find_by_id(db, create_receipt_dto.category_id)
+        if category is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+        if category.organization_id != organization.id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="category is not belong to organization")
+        if category.year != create_receipt_dto.year:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="wrong year")
+        if category.year != create_receipt_dto.paper_date.year:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="wrong year")
+        if create_receipt_dto.actual_date is not None and category.year != create_receipt_dto.actual_date.year:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="wrong year")
+
+        item = await self.item_repository.find_by_id(db, create_receipt_dto.item_id)
+        if item is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        if item.organization_id != organization.id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="item is not belong to organization")
+        if item.category_id != category.id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="item is not belong to category")
+        if create_receipt_dto.event_id is not None:
+            event = await self.event_repository.find_by_id(db, create_receipt_dto.event_id)
+            if event is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+
+        # work
         await self.receipt_repository.create_receipt(
             db,
             create_receipt_dto
         )
 
     async def get_all_receipts(self, db:Session, search_receipt_params:SearchAllReceiptParams):
+        # verify
+        organization = await self.organization_repository.find_by_id(db, search_receipt_params.organization_id)
+        if organization is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
+        if not organization.start_year <= search_receipt_params.year <= organization.end_year:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Organization start year must be in range")
+
+        # work
         receipts = await self.receipt_repository.find_all(
             db=db,
             organization_id=search_receipt_params.organization_id,
@@ -48,9 +94,50 @@ class ReceiptService:
         return [ReceiptResponseDto.model_validate(receipt) for receipt in receipts]
 
     async def update(self, db:Session, edit_receipt_dto: EditReceiptDto):
+        # verify
+        organization = await self.organization_repository.find_by_id(db, edit_receipt_dto.organization_id)
+        if organization is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
+        category = await self.category_repository.find_by_id(db, edit_receipt_dto.category_id)
+        if category is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+        if category.organization_id != edit_receipt_dto.organization_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="category is not belong to organization")
+        item = await self.item_repository.find_by_id(db, edit_receipt_dto.item_id)
+        if item is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        if item.organization_id != edit_receipt_dto.organization_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="item is not belong to organization")
+        if item.category_id != category.id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="item is not belong to category")
+        receipt = await self.receipt_repository.find_by_id(db, edit_receipt_dto.receipt_id)
+        if receipt is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Receipt not found")
+        if receipt.organization_id != edit_receipt_dto.organization_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="receipt is not belong to organization")
+        if receipt.item_id != item.id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="receipt is not belong to item")
+        if edit_receipt_dto.paper_date.year != category.year:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="year must follow category year")
+        if edit_receipt_dto.actual_date is not None and edit_receipt_dto.actual_date.year != receipt.year:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="year must be in range")
+        if edit_receipt_dto.tx_type == TxType.INCOME and edit_receipt_dto.amount <0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="amount cannot be negative")
+        if edit_receipt_dto.tx_type == TxType.OUTCOME and edit_receipt_dto.amount > 0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="amount cannot be positive")
+
+        # work
         receipt = await self.receipt_repository.find_by_id(db, edit_receipt_dto.receipt_id)
         await self.receipt_repository.update(db, receipt, edit_receipt_dto)
 
     async def delete(self, db:Session, delete_receipt_dto:DeleteReceiptParams):
+        organization = await self.organization_repository.find_by_id(db, delete_receipt_dto.organization_id)
+        if organization is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
         receipt = await self.receipt_repository.find_by_id(db, delete_receipt_dto.receipt_id)
+        if receipt is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Receipt not found")
+        if receipt.organization_id != delete_receipt_dto.organization_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="organization not found")
+
         await self.receipt_repository.delete(db, receipt)

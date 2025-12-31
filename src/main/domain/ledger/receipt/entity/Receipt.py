@@ -14,7 +14,7 @@ class Receipt(BaseEntity):
     amount: Mapped[int] = mapped_column(Integer, nullable=False)
     category_id: Mapped[int] = mapped_column(ForeignKey("category.id"), nullable=False)
     item_id: Mapped[int] = mapped_column(ForeignKey("item.id"), nullable=False)
-    event_id: Mapped[int] = mapped_column(ForeignKey("event.id"), nullable=True)
+    event_id: Mapped[int] = mapped_column(ForeignKey("event.id", ondelete="SET NULL"), nullable=True)
     etc:Mapped[str] = mapped_column(String, nullable=True)
     organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)

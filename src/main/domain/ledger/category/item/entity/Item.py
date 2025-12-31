@@ -6,7 +6,7 @@ from common.database import BaseEntity
 class Item(BaseEntity):
     __tablename__ = "item"
     name: Mapped[str] = mapped_column(String, nullable=False)
-    category_id: Mapped[int] = mapped_column(ForeignKey("category.id"), nullable=False)
+    category_id: Mapped[int] = mapped_column(ForeignKey("category.id", ondelete="CASCADE"), nullable=False)
     organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
 
