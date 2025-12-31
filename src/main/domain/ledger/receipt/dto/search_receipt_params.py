@@ -6,8 +6,8 @@ class SearchAllReceiptParams:
 
     def __init__(
             self,
-            organization_id: int = Query(None, description='Organization ID'),
-            year: int = Query(None, description='Year'),
+            organization_id: int = Query(description='Organization ID'),
+            year: int = Query( description='Year'),
     ):
         self.organization_id = organization_id
         self.year = year
