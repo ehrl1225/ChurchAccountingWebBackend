@@ -7,6 +7,7 @@ from common.database import MemberRole
 
 class JoinedOrganizationResponse(BaseModel):
     id: int
+    member_id: int
     member_name:Optional[str] = None
     member_role: MemberRole
 
