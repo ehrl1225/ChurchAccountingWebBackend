@@ -47,4 +47,6 @@ class OrganizationService:
 
     async def delete(self, db:Session, organization_id:int) -> None:
         organization = await self.organization_repository.find_by_id(db, organization_id)
+        if organization.deleted:
+            raise HTTPException(status_code=404, detail="Organization not found")
         await self.organization_repository.soft_delete(db, organization)
