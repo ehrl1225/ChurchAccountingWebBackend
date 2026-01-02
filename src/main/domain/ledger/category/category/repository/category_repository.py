@@ -33,7 +33,14 @@ class CategoryRepository:
                 .filter(Category.organization_id==organization_id)
                 .one_or_none())
 
-    async def find_all(self, db: Session, search_category_dto:SearchCategoryParams) -> list[Category]:
+    async def find_all(self, db:Session, organization_id:int, year:int) -> list[Category]:
+        return (db
+                .query(Category)
+                .filter(Category.organization_id==organization_id)
+                .filter(Category.year==year)
+                ).all()
+
+    async def find_all_by_tx_type(self, db: Session, search_category_dto:SearchCategoryParams) -> list[Category]:
         categories = (db
                       .query(Category)
                       .filter(Category.organization_id==search_category_dto.organization_id,)

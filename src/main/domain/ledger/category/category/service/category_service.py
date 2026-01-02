@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from domain.ledger.category.category.dto import CreateCategoryDTO, DeleteCategoryParams
 from domain.ledger.category.category.dto.category_response_dto import CategoryResponseDto
 from domain.ledger.category.category.dto.edit_category_dto import EditCategoryDto
+from domain.ledger.category.category.dto.import_category_dto import ImportCategoryDto
 from domain.ledger.category.category.dto.search_category_params import SearchCategoryParams
 from domain.ledger.category.category.entity import Category
 from domain.ledger.category.category.repository import CategoryRepository
@@ -51,7 +52,7 @@ class CategoryService:
         return category
 
     async def find_all(self, db:Session, search_category_dto:SearchCategoryParams):
-        categories = await self.category_repository.find_all(db=db, search_category_dto=search_category_dto)
+        categories = await self.category_repository.find_all_by_tx_type(db=db, search_category_dto=search_category_dto)
         category_dtos = []
         for category in categories:
             category_dto = CategoryResponseDto.model_validate(category)
@@ -78,3 +79,39 @@ class CategoryService:
         if len(receipts) != 0:
             raise HTTPException(status_code=400, detail="Category has receipts")
         await self.category_repository.delete(db, category)
+
+    async def import_categories(self, db:Session, import_categories_dto:ImportCategoryDto):
+        from_categories = await self.category_repository.find_all(db, import_categories_dto.from_organization_id, import_categories_dto.from_organization_year)
+        to_categories = await self.category_repository.find_all(db, import_categories_dto.to_organization_id, import_categories_dto.to_organization_year)
+        for from_category in from_categories:
+            for to_category in to_categories:
+                if from_category.name == to_category.name:
+                    for from_item in from_category.items:
+                        for to_item in to_category.items:
+                            if from_item.item_name == to_item.item_name:
+                                break
+                        else:
+                            await self.item_repository.create_item(db, create_item_dto=CreateItemDto(
+                                organization_id=import_categories_dto.to_organization_id,
+                                year=import_categories_dto.to_organization_year,
+                                category_id=to_category.id,
+                                item_name=from_item.item_name,
+                            ))
+                    break
+            else:
+                category = await self.category_repository.create_category(db, create_category_dto=CreateCategoryDTO(
+                    organization_id=import_categories_dto.to_organization_id,
+                    year=import_categories_dto.to_organization_year,
+                    category_name=from_category.name,
+                    item_name=None,
+                    tx_type=from_category.tx_type,
+                ))
+                for from_item in from_category.items:
+                    await self.item_repository.create_item(db, create_item_dto=CreateItemDto(
+                        organization_id=import_categories_dto.to_organization_id,
+                        year=import_categories_dto.to_organization_year,
+                        category_id=category.id,
+                        item_name=from_item.item_name,
+                    ))
+
+
