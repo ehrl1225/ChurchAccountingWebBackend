@@ -10,9 +10,7 @@ from common.dependency_injector import Container
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from common.database.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
 from domain.ledger.category.category.dto import CreateCategoryDTO, SearchCategoryParams, DeleteCategoryParams, \
-    ImportCategoryDto
-from domain.ledger.category.category.dto.edit_all_category_dto import EditAllCategoryDto
-from domain.ledger.category.category.dto.edit_category_dto import EditCategoryDto
+    ImportCategoryDto, EditCategoryDto, EditAllDto
 from domain.ledger.category.category.service import CategoryService
 
 router = APIRouter(prefix="/ledger/category", tags=["Category"])
@@ -100,7 +98,7 @@ async def update_category(
 async def update_all_categories(
         request: Request,
         response: Response,
-        edit_all_category: EditAllCategoryDto,
+        edit_all_dto: EditAllDto,
         db: Session = Depends(get_db),
         category_service: CategoryService = Depends(Provide[Container.category_service]),
 ):
@@ -108,9 +106,10 @@ async def update_all_categories(
     await check_member_role(
         db=db,
         member_id=me_dto.id,
-        organization_id=edit_all_category.organization_id,
+        organization_id=edit_all_dto.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK,
     )
+    await category_service.edit_all(db, edit_all_dto)
 
 @router.delete("/", status_code=status.HTTP_202_ACCEPTED)
 @inject

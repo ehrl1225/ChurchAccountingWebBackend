@@ -1,15 +1,11 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from domain.ledger.category.category.dto import CreateCategoryDTO, DeleteCategoryParams
-from domain.ledger.category.category.dto.category_response_dto import CategoryResponseDto
-from domain.ledger.category.category.dto.edit_category_dto import EditCategoryDto
-from domain.ledger.category.category.dto.import_category_dto import ImportCategoryDto
-from domain.ledger.category.category.dto.search_category_params import SearchCategoryParams
+from domain.ledger.category.category.dto import CreateCategoryDTO, DeleteCategoryParams, CategoryResponseDto, \
+    EditCategoryDto, ImportCategoryDto, SearchCategoryParams, EditAllDto
 from domain.ledger.category.category.entity import Category
 from domain.ledger.category.category.repository import CategoryRepository
-from domain.ledger.category.item.dto import CreateItemDto
-from domain.ledger.category.item.dto.item_response_dto import ItemResponseDto
+from domain.ledger.category.item.dto import CreateItemDto, ItemResponseDto
 from domain.ledger.category.item.entity import Item
 from domain.ledger.category.item.repository import ItemRepository
 from domain.ledger.receipt.entity import Receipt
@@ -113,5 +109,37 @@ class CategoryService:
                         category_id=category.id,
                         item_name=from_item.item_name,
                     ))
+
+    async def edit_all(self, db:Session, edit_all_dto:EditAllDto):
+        for category_dto in edit_all_dto.categories:
+            if category_dto.id is None:
+                category = await self.category_repository.create_category(db, create_category_dto=CreateCategoryDTO(
+                    organization_id=edit_all_dto.organization_id,
+                    year=edit_all_dto.year,
+                    item_name=None,
+                    category_name=category_dto.category_name,
+                    tx_type=category_dto.tx_type,
+                ))
+            else:
+                category = await self.category_repository.find_by_id(db, category_dto.id)
+                if category_dto.deleted:
+                    await self.category_repository.delete(db, category)
+                    continue
+                if category.name != category_dto.category_name:
+                    await self.category_repository.update_category(db, category, category_dto.category_name)
+            for item_dto in category_dto.items:
+                if item_dto.id is None:
+                    await self.item_repository.create_item(db, create_item_dto=CreateItemDto(
+                        organization_id=edit_all_dto.organization_id,
+                        year=edit_all_dto.year,
+                        category_id=category.id,
+                        item_name=item_dto.name,
+                    ))
+                item = await self.item_repository.find_by_id(db, item_dto.id)
+                if item_dto.deleted:
+                    await self.item_repository.delete_item(db, item)
+                    continue
+                if item.name != item_dto.category_name:
+                    await self.item_repository.update_item(db, item, item_dto.name)
 
 
