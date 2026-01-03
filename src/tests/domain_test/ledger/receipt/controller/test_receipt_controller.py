@@ -5,7 +5,7 @@ from datetime import date
 from common.database import TxType
 from common_test.security import login
 from domain.ledger.receipt.dto import CreateReceiptDto
-from domain.ledger.receipt.dto.edit_receipt_dto import EditReceiptDto
+from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
 from domain.member.dto import LoginFormDTO
 
 

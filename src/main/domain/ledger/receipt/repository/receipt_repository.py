@@ -1,14 +1,12 @@
-from typing import Optional
-
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.operators import and_
+from sqlalchemy import extract, func
 
 from domain.ledger.category.category.entity import Category
 from domain.ledger.category.item.entity import Item
-from domain.ledger.event.entity import Event
 from domain.ledger.receipt.dto import CreateReceiptDto
-from domain.ledger.receipt.dto.edit_receipt_dto import EditReceiptDto
-from domain.organization.organization.entity import Organization
+from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
+from domain.ledger.receipt.dto.response import SummaryData
 from domain.ledger.receipt.entity import Receipt
 
 
@@ -45,6 +43,33 @@ class ReceiptRepository:
     async def find_all(self, db:Session, organization_id: int, year:int) -> list[Receipt]:
         receipts = db.query(Receipt).filter(and_(Receipt.organization_id==organization_id, Receipt.year==year)).all()
         return receipts
+
+    async def find_amount_by_month(self, db:Session, organization_id: int, year:int, month:int) -> list[SummaryData]:
+        data = (db
+                    .query(Category, Item, func.sum(Receipt.amount).label("total_amount"))
+                    .join(Item, Receipt.item_id == Item.id)
+                    .join(Category, Receipt.category_id == Category.id)
+                    .filter(Receipt.organization_id==organization_id)
+                    .filter(Receipt.year==year)
+                    .filter(extract("month", Receipt.paper_date)==month)
+                    .all())
+        if data == [(None, None, None)]:
+            return []
+        return [SummaryData(category=category, item=item, total_amount=total_amount) for category, item, total_amount in data]
+
+    async def find_by_event(self, db:Session, organization_id: int, year:int, event_id:int):
+        data = (db
+                    .query(Category, Item, func.sum(Receipt.amount).label("total_amount"))
+                    .join(Item, Receipt.item_id == Item.id)
+                    .join(Category, Receipt.category_id == Category.id)
+                    .filter(Receipt.organization_id==organization_id)
+                    .filter(Receipt.year==year)
+                    .filter(Receipt.event_id==event_id)
+                    .filter(Receipt.event_id!=None)
+                    .all())
+        if data == [(None, None, None)]:
+            return []
+        return [SummaryData(category=category, item=item, total_amount=total_amount) for category, item, total_amount in data]
 
     async def update(self, db:Session, receipt:Receipt, edit_receipt_dto:EditReceiptDto):
         receipt.receipt_image_url = edit_receipt_dto.receipt_image_url
