@@ -13,7 +13,7 @@ from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
 from domain.ledger.receipt.dto.response import SummaryData
 from domain.ledger.receipt.dto.response.receipt_response_dto import ReceiptResponseDto
 from domain.ledger.receipt.dto.request.search_receipt_params import SearchAllReceiptParams
-from domain.ledger.receipt.dto.request.summary_receipt_params import ReceiptSummaryParams
+from domain.ledger.receipt.dto.request.receipt_summary_params import ReceiptSummaryParams
 from domain.ledger.receipt.dto.response.receipt_summary_category_dto import ReceiptSummaryCategoryDto
 from domain.ledger.receipt.dto.response.receipt_summary_dto import ReceiptSummaryDto
 from domain.ledger.receipt.dto.response.receipt_summary_item_dto import ReceiptSummaryItemDto
@@ -158,7 +158,6 @@ class ReceiptService:
                                 items=items
                             )
                         )
-                    category_id = d.category.id
                     items = [item]
                     category_id = d.category.id
                     category_name = d.category.name

@@ -11,7 +11,7 @@ from domain.ledger.receipt.dto import CreateReceiptDto
 from domain.ledger.receipt.dto.request.delete_receipt_params import DeleteReceiptParams
 from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
 from domain.ledger.receipt.dto.request.search_receipt_params import SearchAllReceiptParams
-from domain.ledger.receipt.dto.request.summary_receipt_params import ReceiptSummaryParams
+from domain.ledger.receipt.dto.request.receipt_summary_params import ReceiptSummaryParams
 from domain.ledger.receipt.service import ReceiptService
 
 router = APIRouter(prefix="/ledger/receipt", tags=["receipt"])
