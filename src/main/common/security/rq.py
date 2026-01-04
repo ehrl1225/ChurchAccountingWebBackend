@@ -21,7 +21,7 @@ def get_current_user(token: str) -> Optional[MemberDTO]:
         payload:dict[str, str] = decode_token(token)
         return dict_to_member(payload)
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
 
 @inject
 async def get_current_user_from_cookie(
@@ -40,20 +40,20 @@ async def get_current_user_from_cookie(
             pass
 
     if refresh_token is None:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
     try:
         decoded_refresh_token = decode_token(refresh_token)
         jti = decoded_refresh_token["jti"]
         if jti is None:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
         db_token:RefreshToken|None = refresh_token_repository.find_refresh_token(db, jti)
         if db_token is None:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
         member = db_token.member
         set_token(member,"access", response)
         return dict_to_member(decoded_refresh_token)
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
 
 @inject
 async def check_member_role(

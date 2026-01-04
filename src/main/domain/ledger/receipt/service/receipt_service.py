@@ -115,29 +115,45 @@ class ReceiptService:
         total_outcome = 0
         match receipt_summary_params.summary_type:
             case SummaryType.MONTH:
-                data.extend(await self.receipt_repository.find_amount_by_month(
-                    db,
-                    receipt_summary_params.organization_id,
-                    receipt_summary_params.year,
-                    receipt_summary_params.month_number
-                ))
+                if receipt_summary_params.month_number is not None:
+                    data.extend(await self.receipt_repository.find_amount_by_month(
+                        db,
+                        receipt_summary_params.organization_id,
+                        receipt_summary_params.year,
+                        receipt_summary_params.month_number
+                    ))
+                else:
+                    data.extend(await self.receipt_repository.find_all_amount(
+                        db,
+                        receipt_summary_params.organization_id,
+                        receipt_summary_params.year
+                    ))
             case SummaryType.EVENT:
-                data.extend(await self.receipt_repository.find_by_event(
-                    db,
-                    receipt_summary_params.organization_id,
-                    receipt_summary_params.year,
-                    receipt_summary_params.event_id
-                ))
+                if receipt_summary_params.event_id is not None:
+                    data.extend(await self.receipt_repository.find_by_event(
+                        db,
+                        receipt_summary_params.organization_id,
+                        receipt_summary_params.year,
+                        receipt_summary_params.event_id
+                    ))
+                else:
+                    data.extend(await self.receipt_repository.find_all_by_event(
+                        db,
+                        receipt_summary_params.organization_id,
+                        receipt_summary_params.year
+                    ))
             case _:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="wrong summary_type")
         receipt_category_dtos:list[ReceiptSummaryCategoryDto] = []
         if len(data) > 0:
             category_id = 0
             category_name: Optional[str] = None
+            tx_type: Optional[TxType] = None
             items = []
             category_total_amount = 0
             for d in data:
                 item = ReceiptSummaryItemDto(
+                    item_id=d.item.id,
                     item_name=d.item.name,
                     amount=d.total_amount
                 )
@@ -153,14 +169,17 @@ class ReceiptService:
                     if category_id != 0:
                         receipt_category_dtos.append(
                             ReceiptSummaryCategoryDto(
+                                category_id=category_id,
                                 category_name=category_name,
                                 amount=category_total_amount,
-                                items=items
+                                items=items,
+                                tx_type = tx_type
                             )
                         )
                     items = [item]
                     category_id = d.category.id
                     category_name = d.category.name
+                    tx_type = d.category.tx_type
                     category_total_amount = d.total_amount
                     continue
 
@@ -168,9 +187,11 @@ class ReceiptService:
                 items.append(item)
             else:
                 receipt_category_dtos.append(ReceiptSummaryCategoryDto(
+                    category_id=category_id,
                     category_name=category_name,
                     amount=category_total_amount,
-                    items=items
+                    items=items,
+                    tx_type = tx_type
                 ))
         if receipt_summary_params.event_id is not None:
             event = await self.event_repository.find_by_id(db, receipt_summary_params.event_id)
