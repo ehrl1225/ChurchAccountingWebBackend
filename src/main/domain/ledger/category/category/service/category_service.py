@@ -107,7 +107,7 @@ class CategoryService:
                         organization_id=import_categories_dto.to_organization_id,
                         year=import_categories_dto.to_organization_year,
                         category_id=category.id,
-                        item_name=from_item.item_name,
+                        item_name=from_item.name,
                     ))
 
     async def edit_all(self, db:Session, edit_all_dto:EditAllDto):

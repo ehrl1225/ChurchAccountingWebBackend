@@ -57,6 +57,18 @@ class ReceiptRepository:
             return []
         return [SummaryData(category=category, item=item, total_amount=total_amount) for category, item, total_amount in data]
 
+    async def find_all_amount(self, db:Session, organization_id: int, year:int) -> list[SummaryData]:
+        data = (db
+                .query(Category, Item, func.sum(Receipt.amount).label("total_amount"))
+                .join(Item, Receipt.item_id == Item.id)
+                .join(Category, Receipt.category_id==Category.id)
+                .filter(Receipt.organization_id==organization_id)
+                .filter(Receipt.year==year)
+                .all())
+        if data == [(None, None, None)]:
+            return []
+        return [SummaryData(category, item, total_amount) for category, item, total_amount in data]
+
     async def find_by_event(self, db:Session, organization_id: int, year:int, event_id:int):
         data = (db
                     .query(Category, Item, func.sum(Receipt.amount).label("total_amount"))
@@ -65,8 +77,20 @@ class ReceiptRepository:
                     .filter(Receipt.organization_id==organization_id)
                     .filter(Receipt.year==year)
                     .filter(Receipt.event_id==event_id)
-                    .filter(Receipt.event_id!=None)
                     .all())
+        if data == [(None, None, None)]:
+            return []
+        return [SummaryData(category=category, item=item, total_amount=total_amount) for category, item, total_amount in data]
+
+    async def find_all_by_event(self, db:Session, organization_id: int, year:int):
+        data = (db
+                .query(Category, Item, func.sum(Receipt.amount).label("total_amount"))
+                .join(Item, Receipt.item_id == Item.id)
+                .join(Category, Receipt.category_id==Category.id)
+                .filter(Receipt.organization_id==organization_id)
+                .filter(Receipt.year==year)
+                .filter(Receipt.event_id!=None)
+                .all())
         if data == [(None, None, None)]:
             return []
         return [SummaryData(category=category, item=item, total_amount=total_amount) for category, item, total_amount in data]
