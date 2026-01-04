@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -5,11 +7,16 @@ from common.database import TxType
 from domain.ledger.category.category.repository import CategoryRepository
 from domain.ledger.category.item.repository import ItemRepository
 from domain.ledger.event.repository import EventRepository
-from domain.ledger.receipt.dto import CreateReceiptDto
-from domain.ledger.receipt.dto.delete_receipt_params import DeleteReceiptParams
-from domain.ledger.receipt.dto.edit_receipt_dto import EditReceiptDto
-from domain.ledger.receipt.dto.receipt_response_dto import ReceiptResponseDto
-from domain.ledger.receipt.dto.search_receipt_params import SearchAllReceiptParams
+from domain.ledger.receipt.dto import CreateReceiptDto, SummaryType
+from domain.ledger.receipt.dto.request.delete_receipt_params import DeleteReceiptParams
+from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
+from domain.ledger.receipt.dto.response import SummaryData
+from domain.ledger.receipt.dto.response.receipt_response_dto import ReceiptResponseDto
+from domain.ledger.receipt.dto.request.search_receipt_params import SearchAllReceiptParams
+from domain.ledger.receipt.dto.request.receipt_summary_params import ReceiptSummaryParams
+from domain.ledger.receipt.dto.response.receipt_summary_category_dto import ReceiptSummaryCategoryDto
+from domain.ledger.receipt.dto.response.receipt_summary_dto import ReceiptSummaryDto
+from domain.ledger.receipt.dto.response.receipt_summary_item_dto import ReceiptSummaryItemDto
 from domain.ledger.receipt.repository import ReceiptRepository
 from domain.member.repository import MemberRepository
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository
@@ -91,7 +98,96 @@ class ReceiptService:
             db=db,
             organization_id=search_receipt_params.organization_id,
             year=search_receipt_params.year,)
-        return [ReceiptResponseDto.model_validate(receipt) for receipt in receipts]
+        receipt_dtos = []
+        for receipt in receipts:
+            receipt_dto = ReceiptResponseDto.model_validate(receipt)
+            receipt_dto.category_name = receipt.category.name
+            receipt_dto.item_name = receipt.item.name
+            if receipt_dto.event_id is not None:
+                receipt_dto.event_name = receipt.event.name
+            receipt_dtos.append(receipt_dto)
+        return receipt_dtos
+
+    async def get_summary_receipt(self, db:Session, receipt_summary_params:ReceiptSummaryParams):
+        data: list[SummaryData] = []
+        event_name = None
+        total_income = 0
+        total_outcome = 0
+        match receipt_summary_params.summary_type:
+            case SummaryType.MONTH:
+                data.extend(await self.receipt_repository.find_amount_by_month(
+                    db,
+                    receipt_summary_params.organization_id,
+                    receipt_summary_params.year,
+                    receipt_summary_params.month_number
+                ))
+            case SummaryType.EVENT:
+                data.extend(await self.receipt_repository.find_by_event(
+                    db,
+                    receipt_summary_params.organization_id,
+                    receipt_summary_params.year,
+                    receipt_summary_params.event_id
+                ))
+            case _:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="wrong summary_type")
+        receipt_category_dtos:list[ReceiptSummaryCategoryDto] = []
+        if len(data) > 0:
+            category_id = 0
+            category_name: Optional[str] = None
+            items = []
+            category_total_amount = 0
+            for d in data:
+                item = ReceiptSummaryItemDto(
+                    item_name=d.item.name,
+                    amount=d.total_amount
+                )
+                match d.category.tx_type:
+                    case TxType.INCOME:
+                        total_income += d.total_amount
+                    case TxType.OUTCOME:
+                        total_outcome += d.total_amount
+                    case _:
+                        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="wrong tx_type")
+
+                if d.category.id != category_id:
+                    if category_id != 0:
+                        receipt_category_dtos.append(
+                            ReceiptSummaryCategoryDto(
+                                category_name=category_name,
+                                amount=category_total_amount,
+                                items=items
+                            )
+                        )
+                    items = [item]
+                    category_id = d.category.id
+                    category_name = d.category.name
+                    category_total_amount = d.total_amount
+                    continue
+
+                category_total_amount += d.total_amount
+                items.append(item)
+            else:
+                receipt_category_dtos.append(ReceiptSummaryCategoryDto(
+                    category_name=category_name,
+                    amount=category_total_amount,
+                    items=items
+                ))
+        if receipt_summary_params.event_id is not None:
+            event = await self.event_repository.find_by_id(db, receipt_summary_params.event_id)
+            if event is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+            event_name = event.name
+        balance = total_income - total_outcome
+        return ReceiptSummaryDto(
+            summary_type=receipt_summary_params.summary_type,
+            month_number=receipt_summary_params.month_number,
+            event_id=receipt_summary_params.event_id,
+            event_name=event_name,
+            total_income=total_income,
+            total_outcome=total_outcome,
+            balance=balance,
+            categories=receipt_category_dtos
+        )
 
     async def update(self, db:Session, edit_receipt_dto: EditReceiptDto):
         # verify

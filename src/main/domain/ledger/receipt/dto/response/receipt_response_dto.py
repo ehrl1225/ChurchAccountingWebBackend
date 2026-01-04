@@ -18,6 +18,8 @@ class ReceiptResponseDto(BaseModel):
     category_name: Optional[str] = None
     item_id: int
     item_name: Optional[str] = None
+    event_id: Optional[int]
+    event_name: Optional[str] = None
     etc: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
