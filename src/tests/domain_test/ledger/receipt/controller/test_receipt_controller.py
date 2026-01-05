@@ -146,7 +146,7 @@ def test_create_receipt_fail5(client: TestClient):
         actual_date=None,
         name="receipt",
         tx_type=TxType.OUTCOME,
-        amount=100,
+        amount=-100,
         category_id=1,
         item_id=1,
         event_id=1,
