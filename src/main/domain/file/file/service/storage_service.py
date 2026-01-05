@@ -4,6 +4,14 @@ from typing import BinaryIO
 class StorageService(ABC):
 
     @abstractmethod
+    def create_presigned_post_url(self, object_name: str):
+        pass
+
+    @abstractmethod
+    def create_presigned_get_url(self, object_name: str):
+        pass
+
+    @abstractmethod
     async def upload_file(self, file: BinaryIO, file_name: str, content_type: str) -> str:
         """
         Uploads a file to the storage and returns its accessible URL.
