@@ -69,7 +69,7 @@ class CategoryService:
         await self.category_repository.update_category(db, category, edit_category_dto.category_name)
 
     async def delete(self, db: AsyncSession, delete_category:DeleteCategoryParams):
-        category:Category = await self.category_repository.find_by_organization_and_id(db, delete_category.organization_id, delete_category.category_id)
+        category:Category = await self.category_repository.find_by_organization_id_with_receipts(db, delete_category.organization_id, delete_category.category_id)
         if not category:
             raise HTTPException(status_code=404, detail="Category not found")
         receipts:list[Receipt] = category.receipts

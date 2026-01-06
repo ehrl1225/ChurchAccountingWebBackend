@@ -19,7 +19,7 @@ class ItemService:
             organization_repository:OrganizationRepository,
     ):
         self.category_repository = category_repository
-        self.item_repository = item_repository
+        self.item_repository:ItemRepository = item_repository
         self.organization_repository = organization_repository
 
     async def create_item(self, db: AsyncSession, create_item_dto:CreateItemDto):
@@ -51,7 +51,7 @@ class ItemService:
 
 
     async def delete_item(self, db: AsyncSession, delete_item:DeleteItemParams):
-        item = await self.item_repository.find_by_organization_category_and_id(
+        item = await self.item_repository.find_by_year_and_id_with_receipts(
             db,
             delete_item.organization_id,
             delete_item.category_id,

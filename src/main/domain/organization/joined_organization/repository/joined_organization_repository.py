@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import and_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -49,6 +49,10 @@ class JoinedOrganizationRepository:
 
     async def find_all_by_member(self, db: AsyncSession, member_id: int):
         query = (select(JoinedOrganization)
+                 .options(
+                    joinedload(JoinedOrganization.organization)
+                    .selectinload(Organization.joined_organizations)
+                    .joinedload(JoinedOrganization.member))
                  .filter(JoinedOrganization.member_id == member_id))
         result = await db.execute(query)
         return result.scalars().all()

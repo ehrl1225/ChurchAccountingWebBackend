@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql.operators import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -40,6 +40,9 @@ class OrganizationInvitationRepository:
 
     async def find_pending_by_member_id(self, db:AsyncSession, member_id:int) -> list[OrganizationInvitation]:
         query = (select(OrganizationInvitation)
+                 .options(
+                    joinedload(OrganizationInvitation.invitor),
+                    joinedload(OrganizationInvitation.organization))
                  .filter(OrganizationInvitation.member_id == member_id)
                  .filter(OrganizationInvitation.status == StatusEnum.PENDING))
         result = await db.execute(query)

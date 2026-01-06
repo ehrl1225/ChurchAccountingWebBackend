@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql.operators import and_
 from sqlalchemy import extract, func
 from sqlalchemy.future import select
@@ -46,6 +46,10 @@ class ReceiptRepository:
 
     async def find_all(self, db:AsyncSession, organization_id: int, year:int) -> list[Receipt]:
         query = (select(Receipt)
+                 .options(
+                    joinedload(Receipt.category),
+                            joinedload(Receipt.item),
+                            joinedload(Receipt.event),)
                  .filter(Receipt.organization_id==organization_id)
                  .filter(Receipt.year==year))
         result = await db.execute(query)

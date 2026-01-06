@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,6 +30,16 @@ class ItemRepository:
                  .filter(Item.organization_id == organization_id)
                  .filter(Item.category_id==category_id)
                  .filter(Item.id==item_id))
+        result = await db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def find_by_year_and_id_with_receipts(self, db:AsyncSession, organization_id:int, category_id, item_id) -> Optional[Item]:
+        query = (select(Item)
+                 .options(selectinload(Item.receipts))
+                 .filter(Item.organization_id == organization_id)
+                 .filter(Item.category_id==category_id)
+                 .filter(Item.id==item_id)
+                 )
         result = await db.execute(query)
         return result.scalar_one_or_none()
 

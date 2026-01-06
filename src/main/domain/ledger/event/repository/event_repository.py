@@ -26,7 +26,7 @@ class EventRepository:
             organization_id=create_event_dto.organization_id,
             year=create_event_dto.year,
         )
-        await db.add(event)
+        db.add(event)
         await db.flush()
         await db.refresh(event)
         return event
