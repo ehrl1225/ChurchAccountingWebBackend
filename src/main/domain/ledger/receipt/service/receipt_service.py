@@ -47,9 +47,9 @@ class ReceiptService:
         # verify
         if create_receipt_dto.tx_type == TxType.INCOME and create_receipt_dto.amount < 0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Income transaction must be greater than 0")
-        if create_receipt_dto.tx_type == TxType.OUTCOME and create_receipt_dto.amount > 0:
+        if create_receipt_dto.tx_type == TxType.OUTCOME and create_receipt_dto.amount < 0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Outcome must not be greater than 0")
-
+        create_receipt_dto.amount = -create_receipt_dto.amount
         organization = await self.organization_repository.find_by_id(db, create_receipt_dto.organization_id)
         if organization is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
@@ -103,6 +103,7 @@ class ReceiptService:
             receipt_dto = ReceiptResponseDto.model_validate(receipt)
             receipt_dto.category_name = receipt.category.name
             receipt_dto.item_name = receipt.item.name
+            receipt_dto.amount = abs(receipt.amount)
             if receipt_dto.event_id is not None:
                 receipt_dto.event_name = receipt.event.name
             receipt_dtos.append(receipt_dto)
@@ -198,14 +199,14 @@ class ReceiptService:
             if event is None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
             event_name = event.name
-        balance = total_income - total_outcome
+        balance = total_income + total_outcome
         return ReceiptSummaryDto(
             summary_type=receipt_summary_params.summary_type,
             month_number=receipt_summary_params.month_number,
             event_id=receipt_summary_params.event_id,
             event_name=event_name,
             total_income=total_income,
-            total_outcome=total_outcome,
+            total_outcome=abs(total_outcome),
             balance=balance,
             categories=receipt_category_dtos
         )

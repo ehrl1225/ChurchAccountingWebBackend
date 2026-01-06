@@ -515,6 +515,15 @@ wheels = [
 ]
 
 [[package]]
+name = "mypy-boto3-s3"
+version = "1.42.21"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a0/32/aa7208348dc8db8bd4ea357e5e6e1e8bcba44419033d03456c3b767a6c98/mypy_boto3_s3-1.42.21.tar.gz", hash = "sha256:cab71c918aac7d98c4d742544c722e37d8e7178acb8bc88a0aead7b1035026d2", size = 76024, upload-time = "2026-01-03T02:46:35.161Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f1/c0/01babfa8cef5f992a2a0f3d52fc1123fbbc336ab6decfdfc8f702e88a8af/mypy_boto3_s3-1.42.21-py3-none-any.whl", hash = "sha256:f5b7d1ed718ba5b00f67e95a9a38c6a021159d3071ea235e6cf496e584115ded", size = 83169, upload-time = "2026-01-03T02:46:33.356Z" },
+]
+
+[[package]]
 name = "packaging"
 version = "25.0"
 source = { registry = "https://pypi.org/simple" }
@@ -905,6 +914,7 @@ dependencies = [
     { name = "gunicorn" },
     { name = "httpx" },
     { name = "itsdangerous" },
+    { name = "mypy-boto3-s3" },
     { name = "paginate-sqlalchemy" },
     { name = "passlib", extra = ["bcrypt"] },
     { name = "psycopg" },
@@ -931,6 +941,7 @@ requires-dist = [
     { name = "gunicorn", specifier = ">=23.0.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "itsdangerous", specifier = ">=2.2.0" },
+    { name = "mypy-boto3-s3", specifier = ">=1.42.21" },
     { name = "paginate-sqlalchemy", specifier = ">=0.3.1" },
     { name = "passlib", extras = ["bcrypt"], specifier = ">=1.7.4" },
     { name = "psycopg", specifier = "==3.3.2" },
