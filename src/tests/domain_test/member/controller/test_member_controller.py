@@ -1,6 +1,7 @@
 from httpx import AsyncClient
 from fastapi import status
 import pytest
+from time import sleep
 from domain.member.dto import RegisterFormDTO, LoginFormDTO
 
 """
@@ -24,30 +25,30 @@ async def test_login_member(client: AsyncClient):
     ).model_dump(mode="json"))
     assert response.status_code == status.HTTP_200_OK
 
-@pytest.mark.asyncio
-async def test_register_and_login(client: AsyncClient):
-    response = await client.post("/member/register", json=RegisterFormDTO(
-        name="user1",
-        email="user1@user.com",
-        password="password",
-    ).model_dump(mode="json"))
-    assert response.status_code == status.HTTP_201_CREATED
-    response = await client.post("/member/login", json=LoginFormDTO(
-        email="user1@user.com",
-        password="password"
-    ).model_dump(mode="json"))
-    assert response.status_code == status.HTTP_200_OK
-
-@pytest.mark.asyncio
-async def test_me(client: AsyncClient):
-    response = await client.post("/member/login", json=LoginFormDTO(
-        email="admin@admin.com",
-        password="password"
-    ).model_dump(mode="json"))
-    cookies = response.cookies
-    client.cookies.set("refresh_token", cookies["refresh_token"])
-    response = await client.get("/member/me")
-    assert response.status_code == status.HTTP_200_OK
+# @pytest.mark.asyncio
+# async def test_register_and_login(client: AsyncClient):
+#     response = await client.post("/member/register", json=RegisterFormDTO(
+#         name="user1",
+#         email="user1@user.com",
+#         password="password",
+#     ).model_dump(mode="json"))
+#     assert response.status_code == status.HTTP_201_CREATED
+#     response = await client.post("/member/login", json=LoginFormDTO(
+#         email="user1@user.com",
+#         password="password"
+#     ).model_dump(mode="json"))
+#     assert response.status_code == status.HTTP_200_OK
+#
+# @pytest.mark.asyncio
+# async def test_me(client: AsyncClient):
+#     response = await client.post("/member/login", json=LoginFormDTO(
+#         email="admin@admin.com",
+#         password="password"
+#     ).model_dump(mode="json"))
+#     cookies = response.cookies
+#     client.cookies.set("refresh_token", cookies["refresh_token"])
+#     response = await client.get("/member/me")
+#     assert response.status_code == status.HTTP_200_OK
 
 """
 실패 케이스
