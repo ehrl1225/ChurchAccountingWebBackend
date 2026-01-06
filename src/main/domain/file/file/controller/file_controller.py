@@ -2,6 +2,7 @@ from fastapi import APIRouter, File, UploadFile, Depends, HTTPException, status
 from dependency_injector.wiring import inject, Provide
 import pathlib
 import uuid
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.orm import Session
 
@@ -16,7 +17,7 @@ router = APIRouter(prefix="/file", tags=["File"])
 @inject
 async def upload_file(
         file: UploadFile = File(...),
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         storage_service: StorageService = Depends(Provide[Container.storage_service]),
         file_service: FileService = Depends(Provide[Container.file_service])
 ):

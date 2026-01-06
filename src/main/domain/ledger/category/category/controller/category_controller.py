@@ -4,6 +4,7 @@ from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 from starlette import status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import get_db
 from common.dependency_injector import Container
@@ -21,7 +22,7 @@ async def create_category(
         request: Request,
         response: Response,
         create_category: CreateCategoryDTO,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         category_service:CategoryService = Depends(Provide[Container.category_service])
 ):
     me_dto = await get_current_user_from_cookie(request=request,response=response, db=db)
@@ -39,7 +40,7 @@ async def import_category(
         request: Request,
         response: Response,
         import_category: ImportCategoryDto,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         category_service:CategoryService = Depends(Provide[Container.category_service])
 ):
     me_dto = await get_current_user_from_cookie(request=request, response=response, db=db)
@@ -63,7 +64,7 @@ async def get_categories(
         request: Request,
         response: Response,
         search_category: Annotated[SearchCategoryParams, Depends()],
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         category_service:CategoryService = Depends(Provide[Container.category_service])
 ):
     me_dto = await get_current_user_from_cookie(request=request,response=response, db=db)
@@ -81,7 +82,7 @@ async def update_category(
         request: Request,
         response: Response,
         edit_category:EditCategoryDto,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         category_service:CategoryService = Depends(Provide[Container.category_service])
 ):
     me_dto = await get_current_user_from_cookie(request=request, response=response, db=db)
@@ -99,7 +100,7 @@ async def update_all_categories(
         request: Request,
         response: Response,
         edit_all_dto: EditAllDto,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         category_service: CategoryService = Depends(Provide[Container.category_service]),
 ):
     me_dto = await get_current_user_from_cookie(request=request, response=response, db=db)
@@ -117,7 +118,7 @@ async def delete_category(
         request: Request,
         response: Response,
         delete_category: Annotated[DeleteCategoryParams, Depends()],
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         category_service:CategoryService = Depends(Provide[Container.category_service])
 ):
     me_dto = await get_current_user_from_cookie(request=request, response=response, db=db)

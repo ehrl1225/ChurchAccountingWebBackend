@@ -19,7 +19,6 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=".env",
-        frozen=True
     )
 
     def model_post_init(self, __context: Any, /) -> None:

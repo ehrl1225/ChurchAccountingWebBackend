@@ -1,6 +1,9 @@
 import os
-import pytest
+import pytest, pytest_asyncio
 from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
+from sqlalchemy import StaticPool
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import Session
 
 os.environ["PROFILE"]="test"
@@ -11,53 +14,60 @@ from main import app
 from .common_test.database.init_test_data import init_test_database
 import asyncio
 
-@pytest.fixture(scope="session", autouse=True)
-def setup_test_database():
-    """
-    Creates all tables in the test database once per session.
-    :return:
-    """
+@pytest.fixture(scope="session")
+def anyio_backend():
+    return "asyncio"
 
-    Base.metadata.create_all(bind=engine)
+@pytest.fixture(scope="session")
+def test_engine():
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:",
+        future=True,
+        echo=True,
+        poolclass=StaticPool
+    )
+    return engine
 
-    connection = engine.connect()
-    session = Session(bind=connection)
-    asyncio.run(init_test_database(session))
-    session.commit()
-    connection.close()
+@pytest_asyncio.fixture(scope="session")
+async def setup_db(test_engine):
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    
+    Session = async_sessionmaker(bind=test_engine, expire_on_commit=False, class_=AsyncSession)
+    async with Session() as db_session:
+        await init_test_database(db_session)
+        await db_session.commit()
 
     yield
-    Base.metadata.drop_all(bind=engine)
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    await test_engine.dispose()
 
-@pytest.fixture(scope="function")
-def db_session() -> Session:
-    """
-    Provides a transactional database session for each test function.
-    Rolls back the transaction after the test, ensuring isolation.
-    :return:
-    """
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = Session(bind=connection)
+@pytest_asyncio.fixture
+def session_maker(test_engine):
+    return async_sessionmaker(bind=test_engine,
+                              expire_on_commit=False,
+                              class_=AsyncSession)
 
-    yield session
-    session.close()
-    transaction.rollback()
-    connection.close()
+@pytest_asyncio.fixture
+async def session(session_maker, setup_db):
+    async with session_maker() as s:
+        yield s
 
-@pytest.fixture(scope="function")
-def client(db_session: Session) -> TestClient:
-    """
-    Provides a FastAPI TestClient that is configured to use the transactional db_session
-    :param db_session:
-    :return:
-    """
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
-    app.dependency_overrides[get_db] = override_get_db
-    yield TestClient(app)
-    del app.dependency_overrides[get_db]
+@pytest_asyncio.fixture
+async def app_with_test_db(session_maker, setup_db):
+    async def override_get_session():
+        async with session_maker() as s:
+            yield s
+    app.dependency_overrides.clear()
+    app.dependency_overrides.setdefault(
+        get_db,
+        override_get_session
+    )
+    return app
 
+@pytest_asyncio.fixture
+async def client(app_with_test_db):
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as c:
+        yield c

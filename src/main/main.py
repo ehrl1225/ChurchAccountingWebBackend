@@ -20,19 +20,17 @@ app = FastAPI(
 
 @app.middleware("http")
 async def db_session_middleware(request: Request, call_next):
-    try:
-        request.state.db = SessionLocal()
-        response = await call_next(request)
-        if response.status_code >= 400:
-            request.state.db.rollback()
-        else:
-            request.state.db.commit()
-    except Exception as e:
-        request.state.db.rollback()
-        raise e
-    finally:
-        if hasattr(request.state, "db"):
-            request.state.db.close()
+    async with SessionLocal() as session:
+        request.state.db = session
+        try:
+            response = await call_next(request)
+            if response.status_code >=400:
+                await request.state.db.rollback()
+            else:
+                await request.state.db.commit()
+        except Exception as e:
+            await request.state.db.rollback()
+            raise e
     return response
 
 @app.get("/")

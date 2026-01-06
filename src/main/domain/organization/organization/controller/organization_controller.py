@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from dependency_injector.wiring import inject, Provide
 
 from common.database.member_role import OWNER_ONLY_MASK, OWNER2ADMIN_MASK
@@ -17,7 +18,7 @@ async def create_organization(
         organization:OrganizationRequestDto,
         request:Request,
         response:Response,
-        db:Session = Depends(get_db),
+        db:AsyncSession = Depends(get_db),
         organization_service:OrganizationService = Depends(Provide[Container.organization_service])
 ):
     member = await get_current_user_from_cookie(request, response, db)
@@ -30,7 +31,7 @@ async def update_organization(
         organization:OrganizationRequestDto,
         request:Request,
         response:Response,
-        db:Session = Depends(get_db),
+        db:AsyncSession = Depends(get_db),
         organization_service:OrganizationService = Depends(Provide[Container.organization_service]),
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
@@ -43,7 +44,7 @@ async def delete_organization(
         request:Request,
         response:Response,
         organization_id: int,
-        db:Session = Depends(get_db),
+        db:AsyncSession = Depends(get_db),
         organization_service:OrganizationService = Depends(Provide[Container.organization_service]),
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)

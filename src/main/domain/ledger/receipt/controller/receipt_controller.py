@@ -2,6 +2,7 @@ from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 from typing import Annotated
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import get_db
 from common.database.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
@@ -23,7 +24,7 @@ async def create_receipt(
         request: Request,
         response: Response,
         create_receipt_dto: CreateReceiptDto,
-        db:Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         receipt_service:ReceiptService =  Depends(Provide[Container.receipt_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
@@ -41,7 +42,7 @@ async def get_all_receipts(
         request: Request,
         response: Response,
         params: Annotated[SearchAllReceiptParams, Depends()],
-        db:Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         receipt_service:ReceiptService = Depends(Provide[Container.receipt_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
@@ -59,7 +60,7 @@ async def get_summary_receipts(
         request: Request,
         response: Response,
         params: Annotated[ReceiptSummaryParams, Depends()],
-        db:Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         receipt_service: ReceiptService = Depends(Provide[Container.receipt_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
@@ -77,7 +78,7 @@ async def update_receipt(
         request: Request,
         response: Response,
         edit_receipt_dto: EditReceiptDto,
-        db:Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         receipt_service: ReceiptService = Depends(Provide[Container.receipt_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
@@ -95,7 +96,7 @@ async def delete_receipt(
         request: Request,
         response: Response,
         delete_receipt_params: Annotated[DeleteReceiptParams, Depends()],
-        db:Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         receipt_service: ReceiptService = Depends(Provide[Container.receipt_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)

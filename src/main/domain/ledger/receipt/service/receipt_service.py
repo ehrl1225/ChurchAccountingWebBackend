@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import TxType
 from domain.ledger.category.category.repository import CategoryRepository
@@ -43,7 +44,7 @@ class ReceiptService:
         self.member_repository = member_repository
         self.joined_organization_repository = joined_organization_repository
 
-    async def create_receipt(self, db:Session, create_receipt_dto:CreateReceiptDto):
+    async def create_receipt(self, db: AsyncSession, create_receipt_dto:CreateReceiptDto):
         # verify
         if create_receipt_dto.tx_type == TxType.INCOME and create_receipt_dto.amount < 0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Income transaction must be greater than 0")
@@ -85,7 +86,7 @@ class ReceiptService:
             create_receipt_dto
         )
 
-    async def get_all_receipts(self, db:Session, search_receipt_params:SearchAllReceiptParams):
+    async def get_all_receipts(self, db: AsyncSession, search_receipt_params:SearchAllReceiptParams):
         # verify
         organization = await self.organization_repository.find_by_id(db, search_receipt_params.organization_id)
         if organization is None:
@@ -109,7 +110,7 @@ class ReceiptService:
             receipt_dtos.append(receipt_dto)
         return receipt_dtos
 
-    async def get_summary_receipt(self, db:Session, receipt_summary_params:ReceiptSummaryParams):
+    async def get_summary_receipt(self, db: AsyncSession, receipt_summary_params:ReceiptSummaryParams):
         data: list[SummaryData] = []
         event_name = None
         total_income = 0
@@ -211,7 +212,7 @@ class ReceiptService:
             categories=receipt_category_dtos
         )
 
-    async def update(self, db:Session, edit_receipt_dto: EditReceiptDto):
+    async def update(self, db: AsyncSession, edit_receipt_dto: EditReceiptDto):
         # verify
         organization = await self.organization_repository.find_by_id(db, edit_receipt_dto.organization_id)
         if organization is None:
@@ -248,7 +249,7 @@ class ReceiptService:
         receipt = await self.receipt_repository.find_by_id(db, edit_receipt_dto.receipt_id)
         await self.receipt_repository.update(db, receipt, edit_receipt_dto)
 
-    async def delete(self, db:Session, delete_receipt_dto:DeleteReceiptParams):
+    async def delete(self, db: AsyncSession, delete_receipt_dto:DeleteReceiptParams):
         organization = await self.organization_repository.find_by_id(db, delete_receipt_dto.organization_id)
         if organization is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")

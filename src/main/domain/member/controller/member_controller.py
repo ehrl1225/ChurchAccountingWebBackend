@@ -1,6 +1,7 @@
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, Response, Request, status
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import get_db
 from common.dependency_injector import Container
@@ -20,7 +21,7 @@ router = APIRouter(prefix="/member", tags=["member"])
 async def register_member(
         registerForm: RegisterFormDTO,
         tasks: BackgroundTasks,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         member_service: MemberService = Depends(Provide[Container.member_service]),
         auth_service: AuthService = Depends(Provide[Container.auth_service])
 ):
@@ -36,13 +37,13 @@ async def login_member(
         loginForm: LoginFormDTO,
         request: Request,
         response:Response,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         member_service: MemberService = Depends(Provide[Container.member_service]),
         auth_service: AuthService = Depends(Provide[Container.auth_service])
 ):
     member = await member_service.verify_password(db, loginForm)
     await auth_service.create_token(db, member,request, response)
-    return member
+    return MemberDTO.model_validate(member)
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout_member(
@@ -56,7 +57,7 @@ async def logout_member(
 @inject
 async def verify_email(
         token: str = Query(...),
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         auth_service: AuthService = Depends(Provide[Container.auth_service]),
 ):
     subject = verify_token(token, settings.profile_config.VERIFY_TOKEN_EXPIRATION)
@@ -67,6 +68,6 @@ async def verify_email(
 async def me(
         request: Request,
         response:Response,
-        db:Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
 ):
     return await get_current_user_from_cookie(request,response, db)

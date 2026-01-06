@@ -3,6 +3,7 @@ from typing import Annotated
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import get_db
 from common.database.member_role import OWNER2READ_WRITE_MASK
@@ -20,7 +21,7 @@ async def create_item(
         request: Request,
         response: Response,
         create_item_dto:CreateItemDto,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         item_service: ItemService = Depends(Provide[Container.item_service])
 ):
     me_dto: MemberDTO = await get_current_user_from_cookie(request, response, db)
@@ -38,7 +39,7 @@ async def update_item(
         request: Request,
         response: Response,
         edit_item_dto:EditItemDto,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         item_service: ItemService = Depends(Provide[Container.item_service]),
 ):
     me_dto: MemberDTO = await get_current_user_from_cookie(request, response, db)
@@ -56,7 +57,7 @@ async def delete_item(
         request: Request,
         response: Response,
         delete_item_param:Annotated[DeleteItemParams, Depends()],
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         item_service: ItemService = Depends(Provide[Container.item_service]),
 ):
     me_dto: MemberDTO = await get_current_user_from_cookie(request, response, db)

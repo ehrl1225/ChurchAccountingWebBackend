@@ -1,5 +1,6 @@
-from fastapi.testclient import TestClient
+import pytest
 from fastapi import status
+from httpx import AsyncClient
 
 from common.database import TxType
 from common_test.security import login
@@ -11,9 +12,10 @@ from domain.member.dto import LoginFormDTO
 성공 케이스
 """
 
-def test_create_category(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.post("/ledger/category", json=CreateCategoryDTO(
+@pytest.mark.asyncio
+async def test_create_category(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.post("/ledger/category/", json=CreateCategoryDTO(
         category_name="Test",
         item_name=None,
         tx_type=TxType.INCOME,
@@ -22,9 +24,10 @@ def test_create_category(client: TestClient):
     ).model_dump(mode="json"))
     assert response.status_code == status.HTTP_201_CREATED
 
-def test_create_category_and_item(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.post("/ledger/category", json=CreateCategoryDTO(
+@pytest.mark.asyncio
+async def test_create_category_and_item(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.post("/ledger/category/", json=CreateCategoryDTO(
         category_name="Test",
         item_name="Test Item",
         tx_type=TxType.INCOME,
@@ -33,35 +36,39 @@ def test_create_category_and_item(client: TestClient):
     ).model_dump(mode="json"))
     assert response.status_code == status.HTTP_201_CREATED
 
-def test_get_categories(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.get("/ledger/category/",params={
+@pytest.mark.asyncio
+async def test_get_categories(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.get("/ledger/category/",params={
         "organization_id": 1,
         "year": 2025,
         "tx_type": TxType.INCOME.value,
     })
     assert response.status_code == status.HTTP_200_OK
 
-def test_update_category(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.put("/ledger/category",json=EditCategoryDto(
+@pytest.mark.asyncio
+async def test_update_category(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.put("/ledger/category/",json=EditCategoryDto(
         organization_id=1,
         category_id=1,
         category_name="test_category"
     ).model_dump(mode="json"))
     assert response.status_code == status.HTTP_202_ACCEPTED
 
-def test_delete_category(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.delete("/ledger/category", params={
+@pytest.mark.asyncio
+async def test_delete_category(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.delete("/ledger/category/", params={
         "organization_id": 1,
         "category_id": 4,
     })
     assert response.status_code == status.HTTP_202_ACCEPTED
 
-def test_delete_category_and_item(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.delete("/ledger/category", params={
+@pytest.mark.asyncio
+async def test_delete_category_and_item(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.delete("/ledger/category/", params={
         "organization_id": 1,
         "category_id": 3,
     })
@@ -72,9 +79,10 @@ def test_delete_category_and_item(client: TestClient):
 """
 
 # not exist organization_id
-def test_create_category_fail1(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.post("/ledger/category", json=CreateCategoryDTO(
+@pytest.mark.asyncio
+async def test_create_category_fail1(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.post("/ledger/category/", json=CreateCategoryDTO(
         category_name="Test",
         item_name=None,
         tx_type=TxType.INCOME,
@@ -84,9 +92,10 @@ def test_create_category_fail1(client: TestClient):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 # not own organization
-def test_create_category_fail2(client: TestClient):
-    login(client, LoginFormDTO(email="test_user4@user.com", password="password"))
-    response = client.post("/ledger/category", json=CreateCategoryDTO(
+@pytest.mark.asyncio
+async def test_create_category_fail2(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user4@user.com", password="password"))
+    response = await client.post("/ledger/category/", json=CreateCategoryDTO(
         category_name="Test",
         item_name=None,
         tx_type=TxType.INCOME,
@@ -96,9 +105,10 @@ def test_create_category_fail2(client: TestClient):
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 # not available year
-def test_create_category_fail3(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.post("/ledger/category", json=CreateCategoryDTO(
+@pytest.mark.asyncio
+async def test_create_category_fail3(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.post("/ledger/category/", json=CreateCategoryDTO(
         category_name="Test",
         item_name=None,
         tx_type=TxType.INCOME,
@@ -108,21 +118,24 @@ def test_create_category_fail3(client: TestClient):
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 # no data
-def test_create_category_fail4(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.post("/ledger/category")
+@pytest.mark.asyncio
+async def test_create_category_fail4(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.post("/ledger/category/")
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 # no data
-def test_get_categories_fail1(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.get("/ledger/category/")
+@pytest.mark.asyncio
+async def test_get_categories_fail1(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.get("/ledger/category/")
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 # not exist organization id
-def test_get_categories_fail2(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.get("/ledger/category/",params={
+@pytest.mark.asyncio
+async def test_get_categories_fail2(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.get("/ledger/category/",params={
         "organization_id": 100,
         "year": 2025,
         "tx_type": TxType.INCOME.value,
@@ -130,9 +143,10 @@ def test_get_categories_fail2(client: TestClient):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 # not own organization
-def test_get_categories_fail3(client: TestClient):
-    login(client, LoginFormDTO(email="test_user4@user.com", password="password"))
-    response = client.get("/ledger/category/",params={
+@pytest.mark.asyncio
+async def test_get_categories_fail3(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user4@user.com", password="password"))
+    response = await client.get("/ledger/category/",params={
         "organization_id": 1,
         "year": 2025,
         "tx_type": TxType.INCOME.value,
@@ -140,9 +154,10 @@ def test_get_categories_fail3(client: TestClient):
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 # not exist TX type
-def test_get_categories_fail4(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.get("/ledger/category/",params={
+@pytest.mark.asyncio
+async def test_get_categories_fail4(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.get("/ledger/category/",params={
         "organization_id": 1,
         "year": 2025,
         "tx_type": "wrong",
@@ -150,15 +165,17 @@ def test_get_categories_fail4(client: TestClient):
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 # no data
-def test_update_category_fail1(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.put("/ledger/category")
+@pytest.mark.asyncio
+async def test_update_category_fail1(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.put("/ledger/category/")
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 # not exist organization_id
-def test_update_category_fail2(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.put("/ledger/category", json=EditCategoryDto(
+@pytest.mark.asyncio
+async def test_update_category_fail2(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.put("/ledger/category/", json=EditCategoryDto(
         organization_id=100,
         category_id=1,
         category_name="test_category"
@@ -166,9 +183,10 @@ def test_update_category_fail2(client: TestClient):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 # wrong organization id
-def test_update_category_fail3(client: TestClient):
-    login(client, LoginFormDTO(email="test_user4@user.com", password="password"))
-    response = client.put("/ledger/category", json=EditCategoryDto(
+@pytest.mark.asyncio
+async def test_update_category_fail3(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user4@user.com", password="password"))
+    response = await client.put("/ledger/category/", json=EditCategoryDto(
         organization_id=1,
         category_id=1,
         category_name="test_category"
@@ -176,9 +194,10 @@ def test_update_category_fail3(client: TestClient):
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 # not exist category id
-def test_update_category_fail4(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.put("/ledger/category", json=EditCategoryDto(
+@pytest.mark.asyncio
+async def test_update_category_fail4(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.put("/ledger/category/", json=EditCategoryDto(
         organization_id=1,
         category_id=12,
         category_name="test_category"
@@ -186,9 +205,10 @@ def test_update_category_fail4(client: TestClient):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 # wrong organization id
-def test_update_category_fail5(client: TestClient):
-    login(client, LoginFormDTO(email="test_user4@user.com", password="password"))
-    response = client.put("/ledger/category", json=EditCategoryDto(
+@pytest.mark.asyncio
+async def test_update_category_fail5(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user4@user.com", password="password"))
+    response = await client.put("/ledger/category/", json=EditCategoryDto(
         organization_id=1,
         category_id=1,
         category_name="test_category"
@@ -196,24 +216,27 @@ def test_update_category_fail5(client: TestClient):
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 # can't delete category with receipts
-def test_delete_category_fail1(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.delete("/ledger/category", params={
+@pytest.mark.asyncio
+async def test_delete_category_fail1(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.delete("/ledger/category/", params={
         "organization_id": 1,
         "category_id": 1,
     })
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 # no data
-def test_delete_category_fail2(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.delete("/ledger/category")
+@pytest.mark.asyncio
+async def test_delete_category_fail2(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response = await client.delete("/ledger/category/")
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 # not own category
-def test_delete_category_fail3(client: TestClient):
-    login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
-    response = client.delete("/ledger/category", params={
+@pytest.mark.asyncio
+async def test_delete_category_fail3(client: AsyncClient):
+    await login(client, LoginFormDTO(email="test_user0@user.com", password="password"))
+    response =await client.delete("/ledger/category/", params={
         "organization_id": 2,
         "category_id": 3,
     })

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Request, Response, Depends, status, HTTPException
 from dependency_injector.wiring import inject, Provide
 from sqlalchemy.orm import Session
 from fastapi.responses import StreamingResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import get_db
 from common.database.member_role import OWNER2ADMIN_MASK
@@ -25,7 +26,7 @@ async def create_organization_invitation(
         request: Request,
         response: Response,
         organization_invitation_dto: CreateOrganizationInvitationDto,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         organization_invitation_service:OrganizationInvitationService =  Depends(Provide[Container.organization_invitation_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
@@ -46,7 +47,7 @@ async def update_organization_invitation(
         response: Response,
         organization_invitation_id: int,
         status_literal: Literal["accept", "reject"],
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         organization_invitation_service: OrganizationInvitationService = Depends(Provide[Container.organization_invitation_service])
 ):
     me = await get_current_user_from_cookie(request, response, db)
@@ -65,7 +66,7 @@ async def update_organization_invitation(
 async def get_organization_invitations(
         request: Request,
         response: Response,
-        db:Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         organization_invitation_service:OrganizationInvitationService = Depends(Provide[Container.organization_invitation_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
@@ -77,7 +78,7 @@ async def get_organization_invitations(
 async def subscribe_to_invitations(
         request: Request,
         response: Response,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         organization_invitation_service: OrganizationInvitationService = Depends(
             Provide[Container.organization_invitation_service]
         ),

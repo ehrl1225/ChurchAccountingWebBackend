@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from datetime import date, timedelta
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import MemberRole, TxType
 from domain.file.file.repository import FileRepository
@@ -22,7 +23,7 @@ from domain.organization.organization.entity import Organization
 from domain.organization.organization_invitation.entity import OrganizationInvitation, StatusEnum
 
 
-async def init_test_database(db:Session):
+async def init_test_database(db:AsyncSession):
     # set repository
     member_repository = MemberRepository()
     file_repository = FileRepository()
@@ -181,4 +182,4 @@ async def init_test_database(db:Session):
                 )
 
 
-    db.commit()
+    await db.commit()

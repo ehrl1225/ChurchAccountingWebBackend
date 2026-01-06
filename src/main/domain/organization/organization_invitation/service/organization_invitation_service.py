@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database.member_role import MemberRole
 from common.security.member_DTO import MemberDTO
@@ -29,7 +30,7 @@ class OrganizationInvitationService:
         self.member_repository = member_repository
         self.joined_organization_repository = joined_organization_repository
 
-    async def create(self, db:Session,me_dto:MemberDTO, create_invitation_dto: CreateOrganizationInvitationDto):
+    async def create(self, db: AsyncSession,me_dto:MemberDTO, create_invitation_dto: CreateOrganizationInvitationDto):
         organization = await self.organization_repository.find_by_id(db, create_invitation_dto.organization_id)
         if not organization:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
@@ -39,7 +40,7 @@ class OrganizationInvitationService:
         invitation = await self.organization_invitation_repository.create_invitation(db, organization, member, me_dto.id)
         return invitation
 
-    async def update(self, db:Session, me_dto:MemberDTO , organization_invitation_id:int, status_enum: StatusEnum):
+    async def update(self, db: AsyncSession, me_dto:MemberDTO , organization_invitation_id:int, status_enum: StatusEnum):
         organization_invitation: OrganizationInvitation = await self.organization_invitation_repository.find_by_id(db, organization_invitation_id)
         if not organization_invitation:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization invitation not found")
@@ -57,7 +58,7 @@ class OrganizationInvitationService:
             ))
         await self.organization_invitation_repository.update_invitation_status(db, organization_invitation, status_enum)
 
-    async def get_invitations(self, db:Session, me_dto:MemberDTO) -> list[OrganizationInvitationResponseDto]:
+    async def get_invitations(self, db: AsyncSession, me_dto:MemberDTO) -> list[OrganizationInvitationResponseDto]:
         invitation_dto_list:list[OrganizationInvitationResponseDto] = []
         invitations = await self.organization_invitation_repository.find_pending_by_member_id(db, me_dto.id)
         for organization_invitation in invitations:

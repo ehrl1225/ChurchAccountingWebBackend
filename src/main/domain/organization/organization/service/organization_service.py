@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import MemberRole
 from common.security.member_DTO import MemberDTO
@@ -23,7 +24,7 @@ class OrganizationService:
         self.joined_organization_repository = joined_organization_repository
         self.member_repository = member_repository
 
-    async def create(self, db:Session, member_dto:MemberDTO, organization_request_dto:OrganizationRequestDto):
+    async def create(self, db: AsyncSession, member_dto:MemberDTO, organization_request_dto:OrganizationRequestDto):
         if not organization_request_dto.start_year <= organization_request_dto.end_year:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Organization end year must be greater than the start year")
         organization =  await self.organization_repository.create(db, organization_request_dto)
@@ -37,7 +38,7 @@ class OrganizationService:
         ))
         return organization
 
-    async def update(self, db:Session, organization_id:int, organization_request_dto:OrganizationRequestDto):
+    async def update(self, db: AsyncSession, organization_id:int, organization_request_dto:OrganizationRequestDto):
         if not organization_request_dto.start_year <= organization_request_dto.end_year:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Organization end year must be greater than the start year")
         organization = await self.organization_repository.find_by_id(db, organization_id)
@@ -45,7 +46,7 @@ class OrganizationService:
             raise HTTPException(status_code=404, detail="Organization not found")
         await self.organization_repository.update(db, organization, organization_request_dto)
 
-    async def delete(self, db:Session, organization_id:int) -> None:
+    async def delete(self, db: AsyncSession, organization_id:int) -> None:
         organization = await self.organization_repository.find_by_id(db, organization_id)
         if organization.deleted:
             raise HTTPException(status_code=404, detail="Organization not found")
