@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.ledger.category.category.dto import CreateCategoryDTO, DeleteCategoryParams, CategoryResponseDto, \
     EditCategoryDto, ImportCategoryDto, SearchCategoryParams, EditAllDto
@@ -24,7 +25,7 @@ class CategoryService:
         self.item_repository = item_repository
         self.organization_repository = organization_repository
 
-    async def create(self,db:Session, create_category: CreateCategoryDTO):
+    async def create(self,db: AsyncSession, create_category: CreateCategoryDTO):
         organization = await self.organization_repository.find_by_id(db, create_category.organization_id)
         if not organization:
             raise HTTPException(status_code=404, detail="Organization not found")
@@ -47,7 +48,7 @@ class CategoryService:
         )
         return category
 
-    async def find_all(self, db:Session, search_category_dto:SearchCategoryParams):
+    async def find_all(self, db: AsyncSession, search_category_dto:SearchCategoryParams):
         categories = await self.category_repository.find_all_by_tx_type(db=db, search_category_dto=search_category_dto)
         category_dtos = []
         for category in categories:
@@ -61,13 +62,13 @@ class CategoryService:
             category_dtos.append(category_dto)
         return category_dtos
 
-    async def update(self, db:Session, edit_category_dto:EditCategoryDto):
+    async def update(self, db: AsyncSession, edit_category_dto:EditCategoryDto):
         category = await self.category_repository.find_by_organization_and_id(db, edit_category_dto.organization_id, edit_category_dto.category_id)
         if not category:
             raise HTTPException(status_code=404, detail="Category not found")
         await self.category_repository.update_category(db, category, edit_category_dto.category_name)
 
-    async def delete(self, db:Session, delete_category:DeleteCategoryParams):
+    async def delete(self, db: AsyncSession, delete_category:DeleteCategoryParams):
         category:Category = await self.category_repository.find_by_organization_and_id(db, delete_category.organization_id, delete_category.category_id)
         if not category:
             raise HTTPException(status_code=404, detail="Category not found")
@@ -76,7 +77,7 @@ class CategoryService:
             raise HTTPException(status_code=400, detail="Category has receipts")
         await self.category_repository.delete(db, category)
 
-    async def import_categories(self, db:Session, import_categories_dto:ImportCategoryDto):
+    async def import_categories(self, db: AsyncSession, import_categories_dto:ImportCategoryDto):
         from_categories = await self.category_repository.find_all(db, import_categories_dto.from_organization_id, import_categories_dto.from_organization_year)
         to_categories = await self.category_repository.find_all(db, import_categories_dto.to_organization_id, import_categories_dto.to_organization_year)
         for from_category in from_categories:
@@ -110,7 +111,7 @@ class CategoryService:
                         item_name=from_item.name,
                     ))
 
-    async def edit_all(self, db:Session, edit_all_dto:EditAllDto):
+    async def edit_all(self, db: AsyncSession, edit_all_dto:EditAllDto):
         for category_dto in edit_all_dto.categories:
             if category_dto.id is None:
                 category = await self.category_repository.create_category(db, create_category_dto=CreateCategoryDTO(

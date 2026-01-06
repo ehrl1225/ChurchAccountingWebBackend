@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import MemberRole
 from common.security.member_DTO import MemberDTO
@@ -26,7 +27,7 @@ class JoinedOrganizationService:
         self.member_repository = member_repository
         self.organization_repository = organization_repository
 
-    async def check_if_owner(self, db:Session, organization_id:int, member_id:int):
+    async def check_if_owner(self, db: AsyncSession, organization_id:int, member_id:int):
         member = await self.member_repository.find_by_id(db, member_id)
         if not member:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
@@ -42,7 +43,7 @@ class JoinedOrganizationService:
             return False
     async def change_member_role(
             self,
-            db:Session,
+            db: AsyncSession,
             organization_id:int,
             change_role: ChangeRoleDto
     ):
@@ -60,7 +61,7 @@ class JoinedOrganizationService:
 
     async def get_all_joined_organizations(
             self,
-            db:Session,
+            db: AsyncSession,
             me_dto:MemberDTO
     ):
         member = await self.member_repository.find_by_id(db, me_dto.id)
@@ -88,7 +89,7 @@ class JoinedOrganizationService:
 
     async def delete_joined_organization(
             self,
-            db:Session,
+            db: AsyncSession,
             delete_joined_organization:DeleteJoinedOrganizationParams,
     ):
         joined_organization = await self.joined_organization_repository.find_by_id(db, delete_joined_organization.joined_organization_id)

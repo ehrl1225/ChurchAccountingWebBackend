@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.ledger.event.dto import CreateEventDTO
 from domain.ledger.event.dto.delete_event_params import DeleteEventParams
@@ -21,7 +22,7 @@ class EventService:
         self.event_repository = event_repository
         self.organization_repository = organization_repository
 
-    async def create_event(self, db:Session, create_event_dto:CreateEventDTO):
+    async def create_event(self, db: AsyncSession, create_event_dto:CreateEventDTO):
         # verify
         if create_event_dto.end_date < create_event_dto.start_date:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="End date cannot be before start date")
@@ -38,7 +39,7 @@ class EventService:
         # work
         await self.event_repository.create_event(db, create_event_dto)
 
-    async def find_all(self, db:Session, search_event_params:SearchEventParams):
+    async def find_all(self, db: AsyncSession, search_event_params:SearchEventParams):
         # verify
         organization = await self.organization_repository.find_by_id(db, search_event_params.organization_id)
         if organization is None:
@@ -53,7 +54,7 @@ class EventService:
             year=search_event_params.year)
         return [EventResponseDTO.model_validate(event) for event in events]
 
-    async def update(self, db:Session, edit_event_dto:EditEventDto):
+    async def update(self, db: AsyncSession, edit_event_dto:EditEventDto):
         # verify
         if edit_event_dto.end_date < edit_event_dto.start_date:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="End date cannot be before start date")
@@ -72,7 +73,7 @@ class EventService:
         # work
         await self.event_repository.update(db, event, edit_event_dto)
 
-    async def delete(self, db:Session, delete_event_dto:DeleteEventParams):
+    async def delete(self, db: AsyncSession, delete_event_dto:DeleteEventParams):
         # verify
         event = await self.event_repository.find_by_organization_and_id(
             db,

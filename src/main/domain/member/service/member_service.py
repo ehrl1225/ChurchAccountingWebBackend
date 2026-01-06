@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.member.dto import RegisterFormDTO, LoginFormDTO
 from domain.member.repository import MemberRepository
@@ -15,7 +16,7 @@ class MemberService:
 
     async def add_member(
             self,
-            db:Session,
+            db: AsyncSession,
             register_form_DTO: RegisterFormDTO
     ) -> Member:
         return await self.member_repository.add_member(
@@ -25,12 +26,12 @@ class MemberService:
             hashed_password=hash_password(register_form_DTO.password),
         )
 
-    async def check_email(self, db:Session, email: str) -> bool:
+    async def check_email(self, db: AsyncSession, email: str) -> bool:
         if await self.member_repository.find_by_email(db, email):
             return True
         return False
 
-    async def verify_password(self, db:Session, login_form: LoginFormDTO) -> Member:
+    async def verify_password(self, db: AsyncSession, login_form: LoginFormDTO) -> Member:
         member: Optional[Member] = await self.member_repository.find_by_email(db, login_form.email)
         if member is None:
             raise HTTPException(status_code=400, detail="Incorrect email or password")

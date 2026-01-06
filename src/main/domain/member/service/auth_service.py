@@ -1,5 +1,6 @@
 from fastapi import BackgroundTasks, HTTPException, Response, Request
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.security.email_token import generate_verify_token
 from common.security.mailer import send_verify_email
@@ -23,17 +24,17 @@ class AuthService:
         verify_url = f"{server_base_url}/member/verify?token={token}"
         tasks.add_task(send_verify_email, email, verify_url)
 
-    async def set_verified(self, db:Session, email:str):
+    async def set_verified(self, db: AsyncSession, email:str):
         member = await self.member_repository.find_by_email(db, email)
         if member is None:
             raise HTTPException(status_code=404, detail="Member not found")
         await self.member_repository.modify_member_verification(db, member, True)
 
-    async def create_token(self, db:Session, member:Member, request:Request, response: Response):
+    async def create_token(self, db: AsyncSession, member:Member, request:Request, response: Response):
         set_token(member,"access", response)
         refresh_token:TokenDTO = set_token(member,"refresh", response)
         ip_address = get_client_ip(request)
         user_agent = get_user_agent(request)
-        self.refresh_token_repository.create(db, member, refresh_token, ip_address, user_agent)
+        await self.refresh_token_repository.create(db, member, refresh_token, ip_address, user_agent)
 
 

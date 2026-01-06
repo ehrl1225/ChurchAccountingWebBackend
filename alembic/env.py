@@ -4,6 +4,8 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+import os
+os.environ["PROFILE"]="migrate"
 from common.env import settings
 from common.database import Base
 

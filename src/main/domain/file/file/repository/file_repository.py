@@ -1,12 +1,12 @@
 from fastapi import UploadFile
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.file.file.entity import FileInfo
 
 class FileRepository:
 
 
-    async def create_file_info(self, db:Session, file: UploadFile, file_name: str, file_url: str):
+    async def create_file_info(self, db:AsyncSession, file: UploadFile, file_name: str, file_url: str):
         file_info = FileInfo(
             file_name=file_name,
             original_file_name=file.filename,
@@ -14,6 +14,6 @@ class FileRepository:
             file_size=file.size,
             file_url=file_url
         )
-        db.add(file_info)
-        db.flush()
-        db.refresh(file_info)
+        await db.add(file_info)
+        await db.flush()
+        await db.refresh(file_info)

@@ -3,6 +3,8 @@ from typing import Optional
 
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
+from sqlalchemy.future import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import MemberRole
 from domain.organization.joined_organization.dto import CreateJoinedOrganizationDto
@@ -14,7 +16,7 @@ class JoinedOrganizationRepository:
 
     async def join_organization(
             self,
-            db: Session,
+            db: AsyncSession,
             create_joined_organization: CreateJoinedOrganizationDto
     ):
         joined_organization = JoinedOrganization(
@@ -24,34 +26,33 @@ class JoinedOrganizationRepository:
             joined_at=datetime.now(),
         )
         db.add(joined_organization)
-        db.flush()
-        db.refresh(joined_organization)
+        await db.flush()
+        await db.refresh(joined_organization)
         return joined_organization
 
-    async def find_by_member_and_organization(self, db: Session, member: Member, organization: Organization) -> Optional[JoinedOrganization]:
-        joined_organization = (db
-                               .query(JoinedOrganization)
-                               .filter(and_(JoinedOrganization.member_id == member.id,
-                                            JoinedOrganization.organization_id == organization.id))
-                               .one_or_none())
-        return joined_organization
+    async def find_by_member_and_organization(self, db: AsyncSession, member: Member, organization: Organization) -> Optional[JoinedOrganization]:
+        query = (select(JoinedOrganization)
+                 .filter(JoinedOrganization.member_id == member.id)
+                 .filter(JoinedOrganization.organization_id == organization.id)
+                 )
+        result = await db.execute(query)
+        return result.scalar_one_or_none()
 
-    async def find_by_id(self, db: Session, id: int) -> Optional[JoinedOrganization]:
-        return db.get(JoinedOrganization, id)
+    async def find_by_id(self, db: AsyncSession, id: int) -> Optional[JoinedOrganization]:
+        return await db.get(JoinedOrganization, id)
 
-    async def change_member_role(self, db: Session, joined_organization: JoinedOrganization, member_role: MemberRole):
+    async def change_member_role(self, db: AsyncSession, joined_organization: JoinedOrganization, member_role: MemberRole):
         joined_organization.member_role = member_role
-        db.flush()
-        db.refresh(joined_organization)
+        await db.flush()
+        await db.refresh(joined_organization)
         return joined_organization
 
-    async def find_all_by_member(self, db: Session, member_id: int):
-        joined_organizations = (db
-                                .query(JoinedOrganization)
-                                .filter(JoinedOrganization.member_id == member_id)
-                                .all())
-        return joined_organizations
+    async def find_all_by_member(self, db: AsyncSession, member_id: int):
+        query = (select(JoinedOrganization)
+                 .filter(JoinedOrganization.member_id == member_id))
+        result = await db.execute(query)
+        return result.scalars().all()
 
-    async def delete_joined_organization(self, db: Session, joined_organization: JoinedOrganization):
-        db.delete(joined_organization)
-        db.flush()
+    async def delete_joined_organization(self, db: AsyncSession, joined_organization: JoinedOrganization):
+        await db.delete(joined_organization)
+        await db.flush()

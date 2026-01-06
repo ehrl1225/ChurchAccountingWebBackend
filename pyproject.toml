@@ -5,13 +5,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "aiosqlite>=0.22.1",
     "alembic>=1.17.2",
+    "asyncpg>=0.31.0",
     "authlib>=1.6.5",
     "boto3>=1.42.10",
     "boto3-stubs~=1.42.10",
     "dependency-injector==4.48.3",
     "email-validator>=2.3.0",
     "fastapi==0.124.0",
+    "greenlet>=3.2.4",
     "gunicorn>=23.0.0",
     "httpx>=0.28.1",
     "itsdangerous>=2.2.0",
@@ -26,6 +29,10 @@ dependencies = [
     "python-multipart>=0.0.21",
     "requests>=2.32.5",
     "sqlalchemy>=2.0.44",
+    "sqlalchemy-stubs>=0.4",
     "sqlalchemy2-stubs>=0.0.2a38",
     "uvicorn>=0.38.0",
 ]
+
+[tool.mypy]
+plugins = ["sqlalchemy.ext.mypy.plugin"]

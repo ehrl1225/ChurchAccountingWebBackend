@@ -1,11 +1,19 @@
-from sqlalchemy import create_engine
+from typing import AsyncGenerator
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 from common.env import settings
 from fastapi import Request
 
-engine = create_engine(settings.profile_config.DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_async_engine(settings.profile_config.DATABASE_URL)
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+    class_=AsyncSession
+)
+
 Base = declarative_base()
 
-def get_db(request: Request):
+def get_db(request: Request) -> AsyncSession:
     return request.state.db

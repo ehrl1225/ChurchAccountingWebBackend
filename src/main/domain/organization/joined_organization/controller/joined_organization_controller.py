@@ -3,6 +3,7 @@ from typing import Annotated
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Request, Response, Depends, status, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import get_db, MemberRole
 from common.database.member_role import OWNER2ADMIN_MASK, OWNER2READ_MASK
@@ -22,7 +23,7 @@ async def change_role(
         response: Response,
         organization_id: int,
         change_role: ChangeRoleDto,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         joined_organization_service:JoinedOrganizationService =  Depends(Provide[Container.joined_organization_service])
 ):
     if change_role.member_role == MemberRole.OWNER:
@@ -47,7 +48,7 @@ async def change_role(
 async def list_joined_organizations(
         request: Request,
         response: Response,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         joined_organization_service: JoinedOrganizationService = Depends(Provide[Container.joined_organization_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
@@ -60,7 +61,7 @@ async def delete_joined_organization(
         request: Request,
         response: Response,
         delete_joined_organization: Annotated[DeleteJoinedOrganizationParams, Depends()],
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         joined_organization_service:JoinedOrganizationService = Depends(Provide[Container.joined_organization_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)

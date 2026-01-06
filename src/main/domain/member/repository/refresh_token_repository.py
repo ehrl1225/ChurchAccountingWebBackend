@@ -1,15 +1,17 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.future import select
 from common.security.auth_util import hash_jwt_token
 from common.security.token_DTO import TokenDTO
 from domain.member.entity import Member, RefreshToken
 from datetime import datetime, timedelta
 from common.env import settings
 from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
 
 class RefreshTokenRepository:
 
 
-    def create(self, db:Session, member: Member, token:TokenDTO, ip_address:Optional[str], user_agent:Optional[str]) -> RefreshToken:
+    async def create(self, db:AsyncSession, member: Member, token:TokenDTO, ip_address:Optional[str], user_agent:Optional[str]) -> RefreshToken:
         hashed_token = hash_jwt_token(token.token)
         refresh_token = RefreshToken(
             hashed_token=hashed_token,
@@ -22,9 +24,13 @@ class RefreshTokenRepository:
             member=member,
         )
         db.add(refresh_token)
-        db.commit()
-        db.refresh(refresh_token)
+        await db.flush()
+        await db.refresh(refresh_token)
         return refresh_token
 
-    def find_refresh_token(self, db:Session, jti:str) -> Optional[RefreshToken]:
-        return db.query(RefreshToken).filter(RefreshToken.jti == jti).one_or_none()
+    async def find_refresh_token(self, db:AsyncSession, jti:str) -> Optional[RefreshToken]:
+        query = (select(RefreshToken)
+                 .options(joinedload(RefreshToken.member))
+                 .filter(RefreshToken.jti == jti))
+        result = await db.execute(query)
+        return result.scalar_one_or_none()

@@ -1,63 +1,81 @@
-import os
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
-os.environ["PROFILE"]="test"
-
-
-from common.database import Base, engine, get_db
-from main import app
-from .common_test.database.init_test_data import init_test_database
 import asyncio
+import os
+
+import pytest
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
+
+os.environ["PROFILE"] = "test"
+
+from main import app
+from common.database import Base, get_db
+from common.env import settings
+
+# 1. 비동기 테스트 엔진 생성
+test_engine = create_async_engine(settings.profile_config.DATABASE_URL)
+TestSessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=test_engine, class_=AsyncSession
+)
+
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """pytest-asyncio를 위한 이벤트 루프 설정"""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_test_database():
+async def setup_test_db():
     """
-    Creates all tables in the test database once per session.
-    :return:
+    세션 당 한 번 테스트 데이터베이스 테이블을 생성하고 삭제합니다.
     """
+    # 테이블 생성
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-    Base.metadata.create_all(bind=engine)
-
-    connection = engine.connect()
-    session = Session(bind=connection)
-    asyncio.run(init_test_database(session))
-    session.commit()
-    connection.close()
+    # 테스트 데이터 초기화
+    # init_test_database가 비동기 함수라고 가정합니다.
+    from .common_test.database.init_test_data import init_test_database
+    async with TestSessionLocal() as session:
+        await init_test_database(session)
+        await session.commit()
 
     yield
-    Base.metadata.drop_all(bind=engine)
+
+    # 테이블 삭제
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
 
 @pytest.fixture(scope="function")
-def db_session() -> Session:
+async def async_client() -> AsyncClient:
     """
-    Provides a transactional database session for each test function.
-    Rolls back the transaction after the test, ensuring isolation.
-    :return:
+    각 테스트 함수를 위한 비동기 클라이언트를 제공합니다.
+    모든 테스트는 롤백되는 트랜잭션 안에서 실행됩니다.
     """
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = Session(bind=connection)
+    connection = await test_engine.connect()
+    transaction = await connection.begin()
 
-    yield session
-    session.close()
-    transaction.rollback()
-    connection.close()
+    try:
+        # 트랜잭션 범위의 세션 생성
+        async_session = TestSessionLocal(bind=connection)
 
-@pytest.fixture(scope="function")
-def client(db_session: Session) -> TestClient:
-    """
-    Provides a FastAPI TestClient that is configured to use the transactional db_session
-    :param db_session:
-    :return:
-    """
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
-    app.dependency_overrides[get_db] = override_get_db
-    yield TestClient(app)
-    del app.dependency_overrides[get_db]
+        # get_db 의존성 오버라이드
+        async def override_get_db() -> AsyncSession:
+            yield async_session
 
+        app.dependency_overrides[get_db] = override_get_db
+
+        # 비동기 클라이언트 제공
+        async with AsyncClient(app=app, base_url="http://test") as client:
+            yield client
+
+    finally:
+        # 테스트 후 정리
+        await async_session.close()
+        await transaction.rollback()
+        await connection.close()
+        del app.dependency_overrides[get_db]

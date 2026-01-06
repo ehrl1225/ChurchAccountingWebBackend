@@ -1,6 +1,7 @@
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Request, Response, status, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 
 from common.database import get_db
@@ -21,7 +22,7 @@ async def create_event(
         request:Request,
         response:Response,
         create_event_dto:CreateEventDTO,
-        db:Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         event_service:EventService = Depends(Provide[Container.event_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
@@ -39,7 +40,7 @@ async def get_events(
         request:Request,
         response:Response,
         params: Annotated[SearchEventParams, Depends()],
-        db:Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         event_service:EventService = Depends(Provide[Container.event_service])
 ):
     if params.organization_id is None:
@@ -61,7 +62,7 @@ async def update_event(
         request:Request,
         response:Response,
         edit_event_dto:EditEventDto,
-        db:Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         event_service:EventService = Depends(Provide[Container.event_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
@@ -79,7 +80,7 @@ async def delete_event(
         request:Request,
         response:Response,
         delete_event_params:Annotated[DeleteEventParams, Depends()],
-        db:Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db),
         event_service:EventService = Depends(Provide[Container.event_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)

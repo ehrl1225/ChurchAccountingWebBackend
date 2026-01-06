@@ -1,6 +1,7 @@
 import requests
 from typing import BinaryIO
 from requests.exceptions import RequestException
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.main.domain.file.file.service import StorageService
 from fastapi import HTTPException, status

@@ -2,7 +2,9 @@ from dependency_injector.wiring import inject, Provide
 from fastapi import HTTPException, Request, Response, Depends, status
 from jose import JWTError
 from sqlalchemy.orm import Session
+from domain.member.entity import Member
 from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database.member_role import get_member_roles
 from domain.member.repository import RefreshTokenRepository, MemberRepository
@@ -27,7 +29,7 @@ def get_current_user(token: str) -> Optional[MemberDTO]:
 async def get_current_user_from_cookie(
         request: Request,
         response: Response,
-        db:Session,
+        db:AsyncSession,
         refresh_token_repository: RefreshTokenRepository = Depends(Provide[Container.refresh_token_repository])
 ) -> MemberDTO:
     access_token = request.cookies.get("access_token")
@@ -46,10 +48,10 @@ async def get_current_user_from_cookie(
         jti = decoded_refresh_token["jti"]
         if jti is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
-        db_token:RefreshToken|None = refresh_token_repository.find_refresh_token(db, jti)
+        db_token:Optional[RefreshToken] = await refresh_token_repository.find_refresh_token(db, jti)
         if db_token is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
-        member = db_token.member
+        member:Member = db_token.member
         set_token(member,"access", response)
         return dict_to_member(decoded_refresh_token)
     except JWTError:
@@ -57,7 +59,7 @@ async def get_current_user_from_cookie(
 
 @inject
 async def check_member_role(
-        db:Session,
+        db:AsyncSession,
         member_id: int,
         organization_id: int,
         member_role_mask: int,
