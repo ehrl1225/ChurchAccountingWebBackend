@@ -2,6 +2,7 @@ from pydantic_settings import BaseSettings
 
 class BaseProfileConfig(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///./db.sqlite3"
+    REDIS_URL: str = "redis://localhost:6379/0"
     VERIFY_TOKEN_EXPIRATION: int =  60 * 60 * 24
     SERVER_BASE_URL: str = r"http://localhost:8000"
     SMTP_HOST: str = r"smtp.gmail.com"

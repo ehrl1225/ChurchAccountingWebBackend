@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: str
     REGION_NAME: str
     BUCKET_NAME: str
+    MIGRATION_DB_PASSWORD: str
 
 
     model_config = SettingsConfigDict(
