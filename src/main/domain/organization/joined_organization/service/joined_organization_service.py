@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from redis.asyncio import Redis
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,10 +23,12 @@ class JoinedOrganizationService:
             joined_organization_repository: JoinedOrganizationRepository,
             member_repository: MemberRepository,
             organization_repository: OrganizationRepository,
+            redis_client: Redis,
     ):
         self.joined_organization_repository:JoinedOrganizationRepository = joined_organization_repository
         self.member_repository = member_repository
         self.organization_repository = organization_repository
+        self.redis_client = redis_client
 
     async def check_if_owner(self, db: AsyncSession, organization_id:int, member_id:int):
         member = await self.member_repository.find_by_id(db, member_id)
@@ -57,6 +60,8 @@ class JoinedOrganizationService:
         if not joined_organization:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not joined organization")
         await self.joined_organization_repository.change_member_role(db, joined_organization, change_role.member_role)
+        cache_key = f"role:member:{change_role.member_id}:org:{organization_id}"
+        await self.redis_client.delete(cache_key)
 
 
     async def get_all_joined_organizations(

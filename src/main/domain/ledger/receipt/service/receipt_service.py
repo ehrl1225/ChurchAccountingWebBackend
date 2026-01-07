@@ -50,7 +50,8 @@ class ReceiptService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Income transaction must be greater than 0")
         if create_receipt_dto.tx_type == TxType.OUTCOME and create_receipt_dto.amount < 0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Outcome must not be greater than 0")
-        create_receipt_dto.amount = -create_receipt_dto.amount
+        if create_receipt_dto.tx_type == TxType.OUTCOME:
+            create_receipt_dto.amount = -create_receipt_dto.amount
         organization = await self.organization_repository.find_by_id(db, create_receipt_dto.organization_id)
         if organization is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
