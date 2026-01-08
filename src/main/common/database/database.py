@@ -4,9 +4,9 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from common.env import settings
 from fastapi import Request
 
-engine = create_async_engine(settings.profile_config.DATABASE_URL)
+engine = create_async_engine(settings.profile_config.get_database_url())
 
-SessionLocal = sessionmaker(
+SessionLocal:AsyncSession = sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine,

@@ -28,7 +28,7 @@ from common.env import settings
 class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
         packages=["domain"],
-        modules=["main", "common.security.rq"]
+        modules=["app_setting", "common.security.rq"]
     )
 
 

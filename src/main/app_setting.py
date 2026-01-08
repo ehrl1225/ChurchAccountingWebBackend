@@ -24,57 +24,55 @@ async def lifespan(app: FastAPI):
     finally:
         await RedisClient.close()
 
-def get_app() -> FastAPI:
 
-    app = FastAPI(
-        docs_url="/docs",
-        redoc_url=None,
-        lifespan=lifespan
-    )
 
-    @app.middleware("http")
-    async def db_session_middleware(request: Request, call_next):
-        async with SessionLocal() as session:
-            request.state.db = session
-            try:
-                response = await call_next(request)
-                if response.status_code >=400:
-                    await request.state.db.rollback()
-                else:
-                    await request.state.db.commit()
-            except Exception as e:
+app = FastAPI(
+    docs_url="/docs",
+    redoc_url=None,
+    lifespan=lifespan
+)
+
+@app.middleware("http")
+async def db_session_middleware(request: Request, call_next):
+    async with SessionLocal() as session:
+        request.state.db = session
+        try:
+            response = await call_next(request)
+            if response.status_code >=400:
                 await request.state.db.rollback()
-                raise e
-        return response
+            else:
+                await request.state.db.commit()
+        except Exception as e:
+            await request.state.db.rollback()
+            raise e
+    return response
 
-    @app.get("/")
-    async def root():
-        return {"message": "Hello World"}
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    app.include_router(member_router)
-    app.include_router(organization_router)
-    app.include_router(organization_invitation_router)
-    app.include_router(joined_organization_router)
-    app.include_router(file_router)
-    app.include_router(category_router)
-    app.include_router(category_item_router)
-    app.include_router(event_router)
-    app.include_router(receipt_router)
+app.include_router(member_router)
+app.include_router(organization_router)
+app.include_router(organization_invitation_router)
+app.include_router(joined_organization_router)
+app.include_router(file_router)
+app.include_router(category_router)
+app.include_router(category_item_router)
+app.include_router(event_router)
+app.include_router(receipt_router)
 
-    container = Container()
+container = Container()
 
-    container.wire(
-        modules=container.wiring_config.modules,
-        packages=container.wiring_config.packages
-    )
-
-    app.container = container
-    return app
+container.wire(
+    modules=container.wiring_config.modules,
+    packages=container.wiring_config.packages
+)
+app.container = container

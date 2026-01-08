@@ -10,3 +10,6 @@ class BaseProfileConfig(BaseSettings):
     SMTP_USER: str = "ehrl0506@gmail.com"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    def get_database_url(self):
+        return self.DATABASE_URL

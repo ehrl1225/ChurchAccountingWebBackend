@@ -38,7 +38,7 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-config.set_main_option("sqlalchemy.url", settings.profile_config.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.profile_config.get_database_url())
 
 
 def run_migrations_offline() -> None:

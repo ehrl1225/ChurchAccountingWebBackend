@@ -1,5 +1,9 @@
 .idea
 .venv
 .env
+.env.dev
+.env.prod
+.env.test
+.env.migrate
 db.sqlite3
 **__pycache__
