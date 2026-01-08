@@ -1,5 +1,6 @@
 import os
 import pytest, pytest_asyncio
+from fakeredis.aioredis import FakeRedis
 from fastapi.testclient import TestClient
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import StaticPool
@@ -8,7 +9,7 @@ from sqlalchemy.orm import Session
 
 os.environ["PROFILE"]="test"
 
-
+from app_setting import container
 from common.database import Base, engine, get_db
 from main import app
 from .common_test.database.init_test_data import init_test_database
@@ -64,7 +65,12 @@ async def app_with_test_db(session_maker, setup_db):
         get_db,
         override_get_session
     )
-    return app
+    fake_redis = FakeRedis()
+    container.redis_client.override(fake_redis)
+    yield app
+    app.dependency_overrides.clear()
+    container.redis_client.reset_override()
+
 
 @pytest_asyncio.fixture
 async def client(app_with_test_db):

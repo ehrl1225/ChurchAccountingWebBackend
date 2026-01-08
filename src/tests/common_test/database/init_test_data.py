@@ -181,5 +181,4 @@ async def init_test_database(db:AsyncSession):
                     )
                 )
 
-
     await db.commit()

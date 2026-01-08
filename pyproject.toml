@@ -14,6 +14,7 @@ dependencies = [
     "boto3-stubs~=1.42.10",
     "dependency-injector==4.48.3",
     "email-validator>=2.3.0",
+    "fakeredis>=2.33.0",
     "fastapi==0.124.0",
     "fastapi-cache2>=0.2.2",
     "greenlet>=3.2.4",

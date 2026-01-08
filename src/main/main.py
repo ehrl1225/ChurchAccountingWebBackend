@@ -1,3 +1,1 @@
-from app_setting import get_app
-
-app = get_app()
+from app_setting import app
