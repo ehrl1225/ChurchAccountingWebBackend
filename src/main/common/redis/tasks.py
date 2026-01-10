@@ -151,8 +151,7 @@ async def async_process_excel(file_path: str, organization_id: int, year: int):
             await db.rollback()
             raise e
         finally:
-            # os.remove(file_path)
-            pass
+            os.remove(file_path)
 
 def process_excel_receipt_upload(file_path: str, organization_id: int, year: int):
     asyncio.run(async_process_excel(file_path, organization_id, year))

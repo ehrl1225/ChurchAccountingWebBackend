@@ -4,6 +4,7 @@ from domain.organization.organization.repository import OrganizationRepository
 from domain.organization.organization.service import OrganizationService
 from .word_util import *
 from docx.enum.table import WD_TABLE_ALIGNMENT
+import io
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -263,7 +264,10 @@ class WordService:
                 current_content_side_cell = table3.cell(i, j)
                 setCellBorder(current_content_side_cell, end=single, top=single, bottom=single)
 
-        doc.save("tmp/test.docx")
+        stream = io.BytesIO()
+        doc.save(stream)
+        stream.seek(0)
+        return stream
 
     @staticmethod
     def setCategories(
