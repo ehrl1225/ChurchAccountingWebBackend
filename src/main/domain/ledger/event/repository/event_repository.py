@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from sqlalchemy.sql.operators import and_
+from sqlalchemy import and_, or_
 
 from domain.ledger.event.dto import CreateEventDTO
 from domain.ledger.event.dto.edit_event_dto import EditEventDto
@@ -31,6 +31,13 @@ class EventRepository:
         await db.refresh(event)
         return event
 
+    async def bulk_create(self, db:AsyncSession, events:list[Event]):
+        db.add_all(events)
+        await db.flush()
+        for event in events:
+            await db.refresh(event)
+        return events
+
     async def find_by_id(self, db:AsyncSession, id:int) -> Optional[Event]:
         return await db.get(Event, id)
 
@@ -45,6 +52,18 @@ class EventRepository:
         query = (select(Event)
                  .filter(Event.organization_id==organization_id)
                  .filter(Event.year==year))
+        result = await db.execute(query)
+        return result.scalars().all()
+
+    async def find_all_by_names(self, db:AsyncSession, names:list[str], organization_id:int, year:int) -> list[Event]:
+        if not names:
+            return []
+        query = (
+            select(Event)
+            .filter(Event.organization_id == organization_id)
+            .filter(Event.year==year)
+            .filter(Event.name.in_(names))
+        )
         result = await db.execute(query)
         return result.scalars().all()
 

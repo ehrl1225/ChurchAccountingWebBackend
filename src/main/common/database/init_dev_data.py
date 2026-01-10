@@ -3,7 +3,7 @@ import asyncio
 from sqlalchemy.orm import Mapped
 
 from domain.file.file.repository import FileRepository
-from domain.ledger.category.category.dto import CreateCategoryDTO
+from domain.ledger.category.category.dto.request import CreateCategoryDTO
 from domain.ledger.category.category.repository import CategoryRepository
 from domain.ledger.category.item.dto import CreateItemDto
 from domain.ledger.category.item.repository import ItemRepository

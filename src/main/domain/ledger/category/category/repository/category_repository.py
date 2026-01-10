@@ -1,11 +1,12 @@
+from sqlalchemy import and_, or_
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import selectinload
 
-from domain.ledger.category.category.dto import CreateCategoryDTO
-from domain.ledger.category.category.dto.search_category_params import SearchCategoryParams
+from domain.ledger.category.category.dto.request import CreateCategoryDTO
+from domain.ledger.category.category.dto.request import CategoryCheck, SearchCategoryParams
 from domain.ledger.category.category.entity import Category
-from domain.organization.organization.entity import Organization
 from typing import Optional
 
 
@@ -22,6 +23,13 @@ class CategoryRepository:
         await db.flush()
         await db.refresh(category)
         return category
+
+    async def bulk_create(self, db:AsyncSession, categories:list[Category]):
+        db.add_all(categories)
+        await db.flush()
+        for category in categories:
+            await db.refresh(category)
+        return categories
 
     async def find_by_id(self, db:AsyncSession, id:int) -> Optional[Category]:
         return await db.get(Category, id)
@@ -46,6 +54,22 @@ class CategoryRepository:
         query = (select(Category)
                  .filter(Category.organization_id==organization_id)
                  .filter(Category.year==year))
+        result = await db.execute(query)
+        return result.scalars().all()
+
+    async def find_all_by_names(self, db:AsyncSession, category_checks:list[CategoryCheck], organization_id:int, year:int) -> list[Category]:
+        if not category_checks:
+            return []
+        clauses = [
+            and_(Category.name == c.name, Category.tx_type==c.tx_type)
+            for c in category_checks
+        ]
+        query = (
+            select(Category)
+            .filter(Category.organization_id == organization_id)
+            .filter(Category.year==year)
+            .filter(or_(*clauses))
+        )
         result = await db.execute(query)
         return result.scalars().all()
 

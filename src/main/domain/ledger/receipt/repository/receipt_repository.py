@@ -40,6 +40,13 @@ class ReceiptRepository:
         await db.refresh(receipt)
         return receipt
 
+    async def bulk_create(self, db:AsyncSession, receipts:list[Receipt]) -> list[Receipt]:
+        db.add_all(receipts)
+        await db.flush()
+        for receipt in receipts:
+            await db.refresh(receipt)
+        return receipts
+
     async def find_by_id(self, db:AsyncSession, receipt_id:int) -> Optional[Receipt]:
         receipt = await db.get(Receipt, receipt_id)
         return receipt
@@ -62,7 +69,7 @@ class ReceiptRepository:
                  .filter(Receipt.organization_id==organization_id)
                  .filter(Receipt.year==year)
                  .filter(extract("month", Receipt.paper_date) == month)
-                 .group_by(Item.id)
+                 .group_by(Category.id, Item.id)
                  )
         result = await db.execute(query)
         data = result.all()
@@ -76,7 +83,7 @@ class ReceiptRepository:
                  .join(Category, Receipt.category_id == Category.id)
                  .filter(Receipt.organization_id==organization_id)
                  .filter(Receipt.year==year)
-                 .group_by(Item.id)
+                 .group_by(Category.id, Item.id)
                  )
         result = await db.execute(query)
         data = result.all()

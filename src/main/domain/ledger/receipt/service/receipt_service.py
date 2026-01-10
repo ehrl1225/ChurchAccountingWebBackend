@@ -1,8 +1,12 @@
+import uuid
 from typing import Optional
+import os
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, UploadFile, File
+from rq import Queue
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
+import shutil
 
 from common.database import TxType
 from domain.ledger.category.category.repository import CategoryRepository
@@ -34,7 +38,8 @@ class ReceiptService:
             event_repository: EventRepository,
             organization_repository: OrganizationRepository,
             member_repository: MemberRepository,
-            joined_organization_repository: JoinedOrganizationRepository
+            joined_organization_repository: JoinedOrganizationRepository,
+            redis_queue:Queue,
     ):
         self.receipt_repository = receipt_repository
         self.category_repository = category_repository
@@ -43,6 +48,7 @@ class ReceiptService:
         self.organization_repository = organization_repository
         self.member_repository = member_repository
         self.joined_organization_repository = joined_organization_repository
+        self.redis_queue = redis_queue
 
     async def create_receipt(self, db: AsyncSession, create_receipt_dto:CreateReceiptDto):
         # verify
@@ -86,6 +92,25 @@ class ReceiptService:
             db,
             create_receipt_dto
         )
+
+    async def upload_excel(
+            self,
+            file:UploadFile,
+            organization_id: int,
+            year: int,
+    ):
+        _, ext = os.path.splitext(file.filename)
+
+        temp_file_path = f"./tmp/{uuid.uuid4()}{ext}"
+        with open(temp_file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        self.redis_queue.enqueue(
+            "common.redis.tasks.process_excel_receipt_upload",
+            temp_file_path,
+            organization_id,
+            year,
+        )
+
 
     async def get_all_receipts(self, db: AsyncSession, search_receipt_params:SearchAllReceiptParams):
         # verify
@@ -158,7 +183,7 @@ class ReceiptService:
                 item = ReceiptSummaryItemDto(
                     item_id=d.item.id,
                     item_name=d.item.name,
-                    amount=d.total_amount
+                    amount=abs(d.total_amount)
                 )
                 match d.category.tx_type:
                     case TxType.INCOME:
@@ -174,7 +199,7 @@ class ReceiptService:
                             ReceiptSummaryCategoryDto(
                                 category_id=category_id,
                                 category_name=category_name,
-                                amount=category_total_amount,
+                                amount=abs(category_total_amount),
                                 items=items,
                                 tx_type = tx_type
                             )
@@ -192,7 +217,7 @@ class ReceiptService:
                 receipt_category_dtos.append(ReceiptSummaryCategoryDto(
                     category_id=category_id,
                     category_name=category_name,
-                    amount=category_total_amount,
+                    amount=abs(category_total_amount),
                     items=items,
                     tx_type = tx_type
                 ))

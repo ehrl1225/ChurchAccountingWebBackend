@@ -9,6 +9,7 @@ class DevProfileConfig(BaseProfileConfig):
     DB_HOST: str
     DB_PORT: int
     DB_NAME: str
+    REDIS_HOST: str = "localhost"
 
     model_config = SettingsConfigDict(
         env_file=".env.dev",

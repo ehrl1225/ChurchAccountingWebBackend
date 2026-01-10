@@ -76,8 +76,6 @@ class JoinedOrganizationService:
         organizations = []
         for joined_organization in joined_organizations:
             organization:Organization = joined_organization.organization
-            if organization.deleted:
-                continue
             organization_dto = OrganizationResponseDto.model_validate(organization)
             organization_dto.my_role = joined_organization.member_role
             members = []

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from domain.ledger.category.category.dto import EditAllCategoryDto
+from domain.ledger.category.category.dto.response import EditAllCategoryDto
 
 
 class EditAllDto(BaseModel):

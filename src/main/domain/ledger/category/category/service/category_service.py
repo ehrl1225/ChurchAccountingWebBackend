@@ -2,8 +2,9 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from domain.ledger.category.category.dto import CreateCategoryDTO, DeleteCategoryParams, CategoryResponseDto, \
-    EditCategoryDto, ImportCategoryDto, SearchCategoryParams, EditAllDto
+from domain.ledger.category.category.dto.request import CreateCategoryDTO, DeleteCategoryParams, CategoryResponseDto, \
+    EditCategoryDto, ImportCategoryDto, SearchCategoryParams
+from domain.ledger.category.category.dto.response import EditAllDto
 from domain.ledger.category.category.entity import Category
 from domain.ledger.category.category.repository import CategoryRepository
 from domain.ledger.category.item.dto import CreateItemDto, ItemResponseDto

@@ -49,11 +49,13 @@ class JoinedOrganizationRepository:
 
     async def find_all_by_member(self, db: AsyncSession, member_id: int):
         query = (select(JoinedOrganization)
+                 .join(JoinedOrganization.organization)
                  .options(
                     joinedload(JoinedOrganization.organization)
                     .selectinload(Organization.joined_organizations)
                     .joinedload(JoinedOrganization.member))
-                 .filter(JoinedOrganization.member_id == member_id))
+                 .filter(JoinedOrganization.member_id == member_id)
+                 .filter(Organization.deleted == False))
         result = await db.execute(query)
         return result.scalars().all()
 

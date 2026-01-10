@@ -1,10 +1,9 @@
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.ledger.category.category.repository import CategoryRepository
 from domain.ledger.category.item.dto import CreateItemDto, DeleteItemParams
-from domain.ledger.category.item.dto.edit_item_dto import EditItemDto
+from domain.ledger.category.item.dto.request.edit_item_dto import EditItemDto
 from domain.ledger.category.item.repository import ItemRepository
 from domain.ledger.receipt.entity import Receipt
 from domain.organization.organization.repository import OrganizationRepository

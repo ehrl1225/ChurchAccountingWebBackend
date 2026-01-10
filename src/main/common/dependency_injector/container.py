@@ -1,7 +1,10 @@
 from dependency_injector import containers, providers
 from redis import Redis
+from rq import Queue
 
 from common.redis import get_redis
+from common.redis.redis_client import get_queue
+from domain.file.word.service import WordService
 from domain.member.repository import MemberRepository, RefreshTokenRepository
 from domain.member.service import MemberService
 from domain.member.service.auth_service import AuthService
@@ -44,6 +47,7 @@ class Container(containers.DeclarativeContainer):
     receipt_repository: ReceiptRepository = providers.Singleton(ReceiptRepository)
 
     redis_client: Redis = providers.Singleton(get_redis)
+    redis_queue:Queue = providers.Singleton(get_queue)
 
     member_service: MemberService = providers.Singleton(MemberService, member_repository)
     auth_service: AuthService = providers.Singleton(
@@ -104,4 +108,10 @@ class Container(containers.DeclarativeContainer):
         organization_repository,
         member_repository,
         joined_organization_repository,
+        redis_queue,
+    )
+    word_service:WordService = providers.Singleton(
+        WordService,
+        organization_repository,
+        receipt_service,
     )

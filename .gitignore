@@ -7,3 +7,5 @@
 .env.migrate
 db.sqlite3
 **__pycache__
+postgres_data
+redis-data
