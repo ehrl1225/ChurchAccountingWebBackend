@@ -10,5 +10,4 @@ class CreateSettlementDto(BaseModel):
     month_number: Optional[int]
     event_id: Optional[int]
     organization_id: int
-    organization_name: str
     year: int

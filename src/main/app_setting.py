@@ -16,6 +16,7 @@ from domain.ledger.category.category.controller import router as category_router
 from domain.ledger.category.item.controller import router as category_item_router
 from domain.ledger.event.controller import router as event_router
 from domain.ledger.receipt.controller import router as receipt_router
+from domain.file.word.controller import router as word_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -69,6 +70,7 @@ app.include_router(category_router)
 app.include_router(category_item_router)
 app.include_router(event_router)
 app.include_router(receipt_router)
+app.include_router(word_router)
 
 app.mount("/static", StaticFiles(directory="./static"))
 

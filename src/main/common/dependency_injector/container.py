@@ -110,4 +110,8 @@ class Container(containers.DeclarativeContainer):
         joined_organization_repository,
         redis_queue,
     )
-    word_service:WordService = providers.Singleton(WordService, receipt_service)
+    word_service:WordService = providers.Singleton(
+        WordService,
+        organization_repository,
+        receipt_service,
+    )

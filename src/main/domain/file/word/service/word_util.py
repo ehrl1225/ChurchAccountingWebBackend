@@ -85,3 +85,9 @@ def setCellText(cell: _Cell, text:str, style:Optional[WD_STYLE_TYPE], align:Opti
         cell.paragraphs[0].alignment = align
     if vertical_align is not None:
         cell.vertical_alignment = vertical_align
+
+single = {"val":"single"}
+single_bold = {"val": "single", "sz": 10}
+double = {"val": "double"}
+cell_color = "#E5E5E5"
+last_cell_color = "#BFBFBF"
