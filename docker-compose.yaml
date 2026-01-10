@@ -22,9 +22,12 @@ services:
     container_name: "church_accounting_redis"
     ports:
       - "6379:6379"
-    command: ["redis-server", "--appendonly", "yes"]
+    env_file:
+      - ./.env
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
       - ./redis-data:/data
+
 
 
   

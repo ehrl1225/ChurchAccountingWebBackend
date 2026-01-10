@@ -15,11 +15,11 @@ class RedisClient:
     @classmethod
     async def init(cls):
         cls._pool = ConnectionPool.from_url(
-            url=settings.profile_config.REDIS_URL,
+            url=settings.get_redis_url(),
             encoding="utf-8",
             decode_responses=True)
         cls._client = AsyncRedis(connection_pool=cls._pool)
-        cls._sync_client = SyncRedis.from_url(url=settings.profile_config.REDIS_URL, encoding="utf-8", decode_responses=True)
+        cls._sync_client = SyncRedis.from_url(url=settings.get_redis_url(), encoding="utf-8", decode_responses=True)
         cls._queue = Queue(connection=cls._sync_client)
 
     @classmethod

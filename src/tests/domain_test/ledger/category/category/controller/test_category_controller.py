@@ -4,7 +4,7 @@ from httpx import AsyncClient
 
 from common.database import TxType
 from common_test.security import login
-from domain.ledger.category.category.dto import CreateCategoryDTO
+from domain.ledger.category.category.dto.request import CreateCategoryDTO
 from domain.ledger.category.category.dto.request.edit_category_dto import EditCategoryDto
 from domain.member.dto import LoginFormDTO
 

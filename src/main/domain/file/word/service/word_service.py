@@ -263,7 +263,7 @@ class WordService:
                 current_content_side_cell = table3.cell(i, j)
                 setCellBorder(current_content_side_cell, end=single, top=single, bottom=single)
 
-        doc.save("test.docx")
+        doc.save("tmp/test.docx")
 
     @staticmethod
     def setCategories(
@@ -336,7 +336,7 @@ class WordService:
                 setCellText(item_cell, item.item_name, None, WD_ALIGN_PARAGRAPH.CENTER, WD_ALIGN_VERTICAL.CENTER)
 
                 item_amount_cell = table.cell(item_row_index, 3)
-                setCellText(item_amount_cell, amountToString(abs(item.amount)), None,
+                setCellText(item_amount_cell, amountToString(item.amount), None,
                             WD_ALIGN_PARAGRAPH.CENTER, WD_ALIGN_VERTICAL.CENTER)
 
                 item_etc_cell = table.cell(item_row_index, 5)
@@ -344,7 +344,7 @@ class WordService:
                             WD_ALIGN_VERTICAL.CENTER)
 
             category_total_amount_cell = table.cell(category_row_index, 4)
-            setCellText(category_total_amount_cell, amountToString(abs(category.amount)), None,
+            setCellText(category_total_amount_cell, amountToString(category.amount), None,
                         WD_ALIGN_PARAGRAPH.CENTER, WD_ALIGN_VERTICAL.CENTER)
 
             category_row_index += item_count

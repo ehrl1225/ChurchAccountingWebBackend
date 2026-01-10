@@ -1,5 +1,6 @@
 import uuid
 from typing import Optional
+import os
 
 from fastapi import HTTPException, status, UploadFile, File
 from rq import Queue
@@ -14,7 +15,6 @@ from domain.ledger.event.repository import EventRepository
 from domain.ledger.receipt.dto import CreateReceiptDto, SummaryType
 from domain.ledger.receipt.dto.request.delete_receipt_params import DeleteReceiptParams
 from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
-from domain.ledger.receipt.dto.request.upload_excel_dto import UploadExcelDto
 from domain.ledger.receipt.dto.response import SummaryData
 from domain.ledger.receipt.dto.response.receipt_response_dto import ReceiptResponseDto
 from domain.ledger.receipt.dto.request.search_receipt_params import SearchAllReceiptParams
@@ -96,16 +96,19 @@ class ReceiptService:
     async def upload_excel(
             self,
             file:UploadFile,
-            upload_excel_dto: UploadExcelDto,
+            organization_id: int,
+            year: int,
     ):
-        temp_file_path = f"/tmp/{uuid.uuid4()}-{file.filename}"
+        _, ext = os.path.splitext(file.filename)
+
+        temp_file_path = f"./tmp/{uuid.uuid4()}{ext}"
         with open(temp_file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         self.redis_queue.enqueue(
             "common.redis.tasks.process_excel_receipt_upload",
             temp_file_path,
-            upload_excel_dto.organization_id,
-            upload_excel_dto.year,
+            organization_id,
+            year,
         )
 
 
@@ -180,7 +183,7 @@ class ReceiptService:
                 item = ReceiptSummaryItemDto(
                     item_id=d.item.id,
                     item_name=d.item.name,
-                    amount=d.total_amount
+                    amount=abs(d.total_amount)
                 )
                 match d.category.tx_type:
                     case TxType.INCOME:
@@ -196,7 +199,7 @@ class ReceiptService:
                             ReceiptSummaryCategoryDto(
                                 category_id=category_id,
                                 category_name=category_name,
-                                amount=category_total_amount,
+                                amount=abs(category_total_amount),
                                 items=items,
                                 tx_type = tx_type
                             )
@@ -214,7 +217,7 @@ class ReceiptService:
                 receipt_category_dtos.append(ReceiptSummaryCategoryDto(
                     category_id=category_id,
                     category_name=category_name,
-                    amount=category_total_amount,
+                    amount=abs(category_total_amount),
                     items=items,
                     tx_type = tx_type
                 ))

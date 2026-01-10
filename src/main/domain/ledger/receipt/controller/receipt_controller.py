@@ -13,9 +13,7 @@ from domain.ledger.receipt.dto.request.delete_receipt_params import DeleteReceip
 from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
 from domain.ledger.receipt.dto.request.search_receipt_params import SearchAllReceiptParams
 from domain.ledger.receipt.dto.request.receipt_summary_params import ReceiptSummaryParams
-from domain.ledger.receipt.dto.request.upload_excel_dto import UploadExcelDto
 from domain.ledger.receipt.service import ReceiptService
-import shutil
 
 router = APIRouter(prefix="/ledger/receipt", tags=["receipt"])
 
@@ -38,12 +36,13 @@ async def create_receipt(
     )
     await receipt_service.create_receipt(db, create_receipt_dto)
 
-@router.post("/upload")
+@router.post("/upload/{organization_id}/{year}")
 @inject
 async def upload_receipt_excel(
         request: Request,
         response: Response,
-        upload_excel_dto: UploadExcelDto,
+        organization_id: int,
+        year: int,
         upload_file: UploadFile = File(...),
         db: AsyncSession = Depends(get_db),
         receipt_service:ReceiptService = Depends(Provide[Container.receipt_service])
@@ -52,10 +51,10 @@ async def upload_receipt_excel(
     await check_member_role(
         db=db,
         member_id=me_dto.id,
-        organization_id=upload_excel_dto.organization_id,
+        organization_id=organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK
     )
-    await receipt_service.upload_excel(upload_file, upload_excel_dto)
+    await receipt_service.upload_excel(upload_file, organization_id, year)
 
 @router.get("/all")
 @inject

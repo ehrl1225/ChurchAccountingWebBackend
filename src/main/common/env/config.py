@@ -26,4 +26,7 @@ class Settings(BaseSettings):
         cls = PROFILE_CLASS_MAP[self.PROFILE]
         object.__setattr__(self, "profile_config", cls())
 
+    def get_redis_url(self) -> str:
+        return f"redis://:{self.REDIS_PASSWORD}@{self.profile_config.REDIS_HOST}:6379/0"
+
 settings = Settings()

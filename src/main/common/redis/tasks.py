@@ -2,8 +2,6 @@ import numpy as np
 import pandas as pd
 import os
 
-from pandas.core.dtypes.missing import nan_checker
-
 from common.database import SessionLocal, TxType
 import asyncio
 from datetime import date
@@ -82,7 +80,7 @@ async def async_process_excel(file_path: str, organization_id: int, year: int):
             new_items = []
             new_items_set = set()
             for item in items_data_to_check:
-                if (item.category.name, item.category.tx_type, item.name) in new_items_set:
+                if (item.category_name, item.tx_type, item.item_name) in new_items_set:
                     continue
                 if (item.category_name, item.tx_type, item.item_name) not in item_map:
                     i = Item(
@@ -92,7 +90,7 @@ async def async_process_excel(file_path: str, organization_id: int, year: int):
                         year=year,
                     )
                     new_items.append(i)
-                    new_categories_set.add((item.category_name, item.tx_type, item.name))
+                    new_categories_set.add((item.category_name, item.tx_type, item.item_name))
             for item in await item_repository.bulk_create(db, new_items):
                 item_map[(item.category.name, item.category.tx_type, item.name)] = item
 
@@ -150,10 +148,14 @@ async def async_process_excel(file_path: str, organization_id: int, year: int):
             print("success")
         except Exception as e:
             print(e)
-            db.rollback()
+            await db.rollback()
+            raise e
         finally:
-            os.remove(file_path)
+            # os.remove(file_path)
+            pass
 
 def process_excel_receipt_upload(file_path: str, organization_id: int, year: int):
     asyncio.run(async_process_excel(file_path, organization_id, year))
 
+if __name__ == '__main__':
+    process_excel_receipt_upload("./todo/test.xlsx", 2, 2025)
