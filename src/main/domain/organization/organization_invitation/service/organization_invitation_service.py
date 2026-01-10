@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from redis.asyncio import Redis
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,12 +24,14 @@ class OrganizationInvitationService:
             organization_invitation_repository: OrganizationInvitationRepository,
             organization_repository: OrganizationRepository,
             member_repository: MemberRepository,
-            joined_organization_repository: JoinedOrganizationRepository
+            joined_organization_repository: JoinedOrganizationRepository,
+            redis_client: Redis
     ):
         self.organization_invitation_repository = organization_invitation_repository
         self.organization_repository = organization_repository
         self.member_repository = member_repository
         self.joined_organization_repository = joined_organization_repository
+        self.redis_client = redis_client
 
     async def create(self, db: AsyncSession,me_dto:MemberDTO, create_invitation_dto: CreateOrganizationInvitationDto):
         organization = await self.organization_repository.find_by_id(db, create_invitation_dto.organization_id)
@@ -38,6 +41,8 @@ class OrganizationInvitationService:
         if not member:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
         invitation = await self.organization_invitation_repository.create_invitation(db, organization, member, me_dto.id)
+        channel = f"invitations: {create_invitation_dto.member.id}"
+        await self.redis_client.publish(channel, "Invitation received")
         return invitation
 
     async def update(self, db: AsyncSession, me_dto:MemberDTO , organization_invitation_id:int, status_enum: StatusEnum):
@@ -57,6 +62,8 @@ class OrganizationInvitationService:
                 member_role=MemberRole.READ_ONLY
             ))
         await self.organization_invitation_repository.update_invitation_status(db, organization_invitation, status_enum)
+        channel = f"invitations: {me_dto.id}"
+        await self.redis_client.publish(channel, "Invitation updated")
 
     async def get_invitations(self, db: AsyncSession, me_dto:MemberDTO) -> list[OrganizationInvitationResponseDto]:
         invitation_dto_list:list[OrganizationInvitationResponseDto] = []
