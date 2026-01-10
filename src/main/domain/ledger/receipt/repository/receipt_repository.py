@@ -40,6 +40,13 @@ class ReceiptRepository:
         await db.refresh(receipt)
         return receipt
 
+    async def bulk_create(self, db:AsyncSession, receipts:list[Receipt]) -> list[Receipt]:
+        db.add_all(receipts)
+        await db.flush()
+        for receipt in receipts:
+            await db.refresh(receipt)
+        return receipts
+
     async def find_by_id(self, db:AsyncSession, receipt_id:int) -> Optional[Receipt]:
         receipt = await db.get(Receipt, receipt_id)
         return receipt

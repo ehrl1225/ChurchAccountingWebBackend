@@ -1,8 +1,11 @@
+import uuid
 from typing import Optional
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, UploadFile, File
+from rq import Queue
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
+import shutil
 
 from common.database import TxType
 from domain.ledger.category.category.repository import CategoryRepository
@@ -11,6 +14,7 @@ from domain.ledger.event.repository import EventRepository
 from domain.ledger.receipt.dto import CreateReceiptDto, SummaryType
 from domain.ledger.receipt.dto.request.delete_receipt_params import DeleteReceiptParams
 from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
+from domain.ledger.receipt.dto.request.upload_excel_dto import UploadExcelDto
 from domain.ledger.receipt.dto.response import SummaryData
 from domain.ledger.receipt.dto.response.receipt_response_dto import ReceiptResponseDto
 from domain.ledger.receipt.dto.request.search_receipt_params import SearchAllReceiptParams
@@ -34,7 +38,8 @@ class ReceiptService:
             event_repository: EventRepository,
             organization_repository: OrganizationRepository,
             member_repository: MemberRepository,
-            joined_organization_repository: JoinedOrganizationRepository
+            joined_organization_repository: JoinedOrganizationRepository,
+            redis_queue:Queue,
     ):
         self.receipt_repository = receipt_repository
         self.category_repository = category_repository
@@ -43,6 +48,7 @@ class ReceiptService:
         self.organization_repository = organization_repository
         self.member_repository = member_repository
         self.joined_organization_repository = joined_organization_repository
+        self.redis_queue = redis_queue
 
     async def create_receipt(self, db: AsyncSession, create_receipt_dto:CreateReceiptDto):
         # verify
@@ -86,6 +92,22 @@ class ReceiptService:
             db,
             create_receipt_dto
         )
+
+    async def upload_excel(
+            self,
+            file:UploadFile,
+            upload_excel_dto: UploadExcelDto,
+    ):
+        temp_file_path = f"/tmp/{uuid.uuid4()}-{file.filename}"
+        with open(temp_file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        self.redis_queue.enqueue(
+            "common.redis.tasks.process_excel_receipt_upload",
+            temp_file_path,
+            upload_excel_dto.organization_id,
+            upload_excel_dto.year,
+        )
+
 
     async def get_all_receipts(self, db: AsyncSession, search_receipt_params:SearchAllReceiptParams):
         # verify

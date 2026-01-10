@@ -1,0 +1,1 @@
+from .word_service import WordService

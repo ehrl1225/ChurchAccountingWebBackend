@@ -1,0 +1,30 @@
+version: '3.8'
+
+# 테스트할때 사용하기 위함입니다.
+services:
+  postgres:
+    image: postgres:18
+    container_name: postgres_database
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "church_accounting"
+      TZ: "Asiz/Seoul"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql
+      - ./postgres_setting.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    
+  redis:
+    image: redis:7-alpine
+    container_name: "church_accounting_redis"
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./redis-data:/data
+
+
+  

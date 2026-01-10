@@ -1,5 +1,5 @@
 from dependency_injector.wiring import inject, Provide
-from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,9 @@ from domain.ledger.receipt.dto.request.delete_receipt_params import DeleteReceip
 from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
 from domain.ledger.receipt.dto.request.search_receipt_params import SearchAllReceiptParams
 from domain.ledger.receipt.dto.request.receipt_summary_params import ReceiptSummaryParams
+from domain.ledger.receipt.dto.request.upload_excel_dto import UploadExcelDto
 from domain.ledger.receipt.service import ReceiptService
+import shutil
 
 router = APIRouter(prefix="/ledger/receipt", tags=["receipt"])
 
@@ -35,6 +37,25 @@ async def create_receipt(
         member_role_mask=OWNER2READ_WRITE_MASK
     )
     await receipt_service.create_receipt(db, create_receipt_dto)
+
+@router.post("/upload")
+@inject
+async def upload_receipt_excel(
+        request: Request,
+        response: Response,
+        upload_excel_dto: UploadExcelDto,
+        upload_file: UploadFile = File(...),
+        db: AsyncSession = Depends(get_db),
+        receipt_service:ReceiptService = Depends(Provide[Container.receipt_service])
+):
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=upload_excel_dto.organization_id,
+        member_role_mask=OWNER2READ_WRITE_MASK
+    )
+    await receipt_service.upload_excel(upload_file, upload_excel_dto)
 
 @router.get("/all")
 @inject
