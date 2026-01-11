@@ -67,6 +67,7 @@ class Container(containers.DeclarativeContainer):
         organization_repository,
         member_repository,
         joined_organization_repository,
+        redis_client
     )
     joined_organization_service: JoinedOrganizationService = providers.Singleton(
         JoinedOrganizationService,
