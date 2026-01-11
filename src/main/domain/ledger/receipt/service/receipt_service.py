@@ -171,12 +171,8 @@ class ReceiptService:
             case _:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="wrong summary_type")
         receipt_category_dtos:list[ReceiptSummaryCategoryDto] = []
+        receipt_category_dict:dict[int, ReceiptSummaryCategoryDto] = {}
         if len(data) > 0:
-            category_id = 0
-            category_name: Optional[str] = None
-            tx_type: Optional[TxType] = None
-            items = []
-            category_total_amount = 0
             for d in data:
                 item = ReceiptSummaryItemDto(
                     item_id=d.item.id,
@@ -190,35 +186,18 @@ class ReceiptService:
                         total_outcome += d.total_amount
                     case _:
                         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="wrong tx_type")
-
-                if d.category.id != category_id:
-                    if category_id != 0:
-                        receipt_category_dtos.append(
-                            ReceiptSummaryCategoryDto(
-                                category_id=category_id,
-                                category_name=category_name,
-                                amount=abs(category_total_amount),
-                                items=items,
-                                tx_type = tx_type
-                            )
-                        )
-                    items = [item]
-                    category_id = d.category.id
-                    category_name = d.category.name
-                    tx_type = d.category.tx_type
-                    category_total_amount = d.total_amount
-                    continue
-
-                category_total_amount += d.total_amount
-                items.append(item)
-            else:
-                receipt_category_dtos.append(ReceiptSummaryCategoryDto(
-                    category_id=category_id,
-                    category_name=category_name,
-                    amount=abs(category_total_amount),
-                    items=items,
-                    tx_type = tx_type
-                ))
+                if d.category.id not in receipt_category_dict:
+                    category_dto = ReceiptSummaryCategoryDto(
+                        category_id=d.category.id,
+                        category_name=d.category.name,
+                        amount=abs(d.total_amount),
+                        items=[item],
+                        tx_type = d.category.tx_type
+                    )
+                    receipt_category_dict[d.category.id] = category_dto
+                    receipt_category_dtos.append(category_dto)
+                else:
+                    receipt_category_dict[d.category.id].items.append(item)
         if receipt_summary_params.event_id is not None:
             event = await self.event_repository.find_by_id(db, receipt_summary_params.event_id)
             if event is None:
