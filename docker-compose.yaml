@@ -29,28 +29,28 @@ services:
       - ./redis-data:/data
     restart: unless-stopped
 
-  api:
-    build: .
-    container_name: "church_accounting_api"
-    command: uv run src.main.main:app --host 0.0.0.0 --port 8000 --reload
-    volumes:
-      - .:app
-    ports:
-      - "8000:8000"
-    depends_on:
-      - postgres
-      - redis
-    restart: unless-stopped
-
-  worker:
-    build: .
-    container_name: "church_accounting_worker"
-    command: python src/main/common/reids/worker.py
-    volumes:
-      - .:/app
-    depends_on:
-      - redis
-    restart: unless-stopped
+#  api:
+#    build: .
+#    container_name: "church_accounting_api"
+#    command: uv run src.main.main:app --host 0.0.0.0 --port 8000 --reload
+#    volumes:
+#      - .:app
+#    ports:
+#      - "8000:8000"
+#    depends_on:
+#      - postgres
+#      - redis
+#    restart: unless-stopped
+#
+#  worker:
+#    build: .
+#    container_name: "church_accounting_worker"
+#    command: python src/main/common/redis/worker.py
+#    volumes:
+#      - .:/app
+#    depends_on:
+#      - redis
+#    restart: unless-stopped
 
 
 
