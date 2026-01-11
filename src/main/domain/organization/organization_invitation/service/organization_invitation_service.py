@@ -41,7 +41,7 @@ class OrganizationInvitationService:
         if not member:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
         invitation = await self.organization_invitation_repository.create_invitation(db, organization, member, me_dto.id)
-        channel = f"invitations: {create_invitation_dto.member.id}"
+        channel = f"invitations: {invitation.member_id}"
         await self.redis_client.publish(channel, "Invitation received")
         return invitation
 

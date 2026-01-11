@@ -52,10 +52,8 @@ class ReceiptService:
 
     async def create_receipt(self, db: AsyncSession, create_receipt_dto:CreateReceiptDto):
         # verify
-        if create_receipt_dto.tx_type == TxType.INCOME and create_receipt_dto.amount < 0:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Income transaction must be greater than 0")
-        if create_receipt_dto.tx_type == TxType.OUTCOME and create_receipt_dto.amount < 0:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Outcome must not be greater than 0")
+        if create_receipt_dto.amount < 0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="amount must be greater than 0")
         if create_receipt_dto.tx_type == TxType.OUTCOME:
             create_receipt_dto.amount = -create_receipt_dto.amount
         organization = await self.organization_repository.find_by_id(db, create_receipt_dto.organization_id)
