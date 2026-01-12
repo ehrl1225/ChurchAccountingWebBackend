@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "password"
       POSTGRES_DB: "church_accounting"
-      TZ: "Asiz/Seoul"
+      TZ: "Asia/Seoul"
     volumes:
       - ./postgres_data:/var/lib/postgresql
       - ./postgres_setting.sql:/docker-entrypoint-initdb.d/init-db.sql

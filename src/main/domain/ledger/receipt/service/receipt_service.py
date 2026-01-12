@@ -1,10 +1,8 @@
 import uuid
-from typing import Optional
 import os
 
 from fastapi import HTTPException, status, UploadFile, File
 from rq import Queue
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 import shutil
 

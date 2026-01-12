@@ -1,6 +1,5 @@
 from fastapi import HTTPException, status
 from redis.asyncio import Redis
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database.member_role import MemberRole
@@ -41,8 +40,6 @@ class OrganizationInvitationService:
         if not member:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
         invitation = await self.organization_invitation_repository.create_invitation(db, organization, member, me_dto.id)
-        channel = f"invitations: {invitation.member_id}"
-        await self.redis_client.publish(channel, "Invitation received")
         return invitation
 
     async def update(self, db: AsyncSession, me_dto:MemberDTO , organization_invitation_id:int, status_enum: StatusEnum):
@@ -62,8 +59,6 @@ class OrganizationInvitationService:
                 member_role=MemberRole.READ_ONLY
             ))
         await self.organization_invitation_repository.update_invitation_status(db, organization_invitation, status_enum)
-        channel = f"invitations: {me_dto.id}"
-        await self.redis_client.publish(channel, "Invitation updated")
 
     async def get_invitations(self, db: AsyncSession, me_dto:MemberDTO) -> list[OrganizationInvitationResponseDto]:
         invitation_dto_list:list[OrganizationInvitationResponseDto] = []

@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.ledger.category.category.dto.request import CreateCategoryDTO, DeleteCategoryParams, CategoryResponseDto, \
     EditCategoryDto, ImportCategoryDto, SearchCategoryParams
-from domain.ledger.category.category.dto.response import EditAllDto
+from domain.ledger.category.category.dto.response import EditAllDto, EditAllCategoryDto
 from domain.ledger.category.category.entity import Category
 from domain.ledger.category.category.repository import CategoryRepository
 from domain.ledger.category.item.dto import CreateItemDto, ItemResponseDto
@@ -114,12 +114,13 @@ class CategoryService:
 
     async def edit_all(self, db: AsyncSession, edit_all_dto:EditAllDto):
         for category_dto in edit_all_dto.categories:
+            # category
             if category_dto.id is None:
                 category = await self.category_repository.create_category(db, create_category_dto=CreateCategoryDTO(
                     organization_id=edit_all_dto.organization_id,
                     year=edit_all_dto.year,
                     item_name=None,
-                    category_name=category_dto.category_name,
+                    category_name=category_dto.name,
                     tx_type=category_dto.tx_type,
                 ))
             else:
@@ -127,8 +128,10 @@ class CategoryService:
                 if category_dto.deleted:
                     await self.category_repository.delete(db, category)
                     continue
-                if category.name != category_dto.category_name:
-                    await self.category_repository.update_category(db, category, category_dto.category_name)
+                if category.name != category_dto.name:
+                    await self.category_repository.update_category(db, category, category_dto.name)
+
+            # item
             for item_dto in category_dto.items:
                 if item_dto.id is None:
                     await self.item_repository.create_item(db, create_item_dto=CreateItemDto(
@@ -137,11 +140,12 @@ class CategoryService:
                         category_id=category.id,
                         item_name=item_dto.name,
                     ))
+                    continue
                 item = await self.item_repository.find_by_id(db, item_dto.id)
                 if item_dto.deleted:
                     await self.item_repository.delete_item(db, item)
                     continue
-                if item.name != item_dto.category_name:
+                if item.name != item_dto.name:
                     await self.item_repository.update_item(db, item, item_dto.name)
 
 
