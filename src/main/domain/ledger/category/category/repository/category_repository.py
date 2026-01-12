@@ -74,11 +74,15 @@ class CategoryRepository:
         return result.scalars().all()
 
     async def find_all_by_tx_type(self, db: AsyncSession, search_category_dto:SearchCategoryParams) -> list[Category]:
+        clause = Category.tx_type == search_category_dto.tx_type
+        if search_category_dto.tx_type is None:
+            clause = Category.tx_type != None
+
         query = (select(Category)
                  .options(selectinload(Category.items))
                  .filter(Category.organization_id==search_category_dto.organization_id)
                  .filter(Category.year==search_category_dto.year)
-                 .filter(Category.tx_type==search_category_dto.tx_type))
+                 .filter(clause))
         result = await db.execute(query)
         return result.scalars().all()
 

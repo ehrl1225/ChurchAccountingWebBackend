@@ -1,17 +1,13 @@
 from typing import Literal, List
-import asyncio
 import json
-import hashlib
 
-from fastapi import APIRouter, Request, Response, Depends, status, HTTPException
+from fastapi import APIRouter, Request, Response, Depends, status, HTTPException, BackgroundTasks
 from dependency_injector.wiring import inject, Provide
 from redis.asyncio import Redis
-from sqlalchemy.orm import Session
-from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
-from common.database import get_db
+from common.database import get_db, SessionLocal
 from common.database.member_role import OWNER2ADMIN_MASK
 from common.dependency_injector import Container
 from common.redis import get_redis
@@ -29,7 +25,9 @@ async def create_organization_invitation(
         request: Request,
         response: Response,
         organization_invitation_dto: CreateOrganizationInvitationDto,
+        background_tasks: BackgroundTasks,
         db: AsyncSession = Depends(get_db),
+        redis: Redis = Depends(get_redis),
         organization_invitation_service:OrganizationInvitationService =  Depends(Provide[Container.organization_invitation_service])
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
@@ -41,7 +39,11 @@ async def create_organization_invitation(
         organization_id=organization_invitation_dto.organization_id,
         member_role_mask=OWNER2ADMIN_MASK
     )
-    await organization_invitation_service.create(db, me_dto, organization_invitation_dto)
+    invitation = await organization_invitation_service.create(db, me_dto, organization_invitation_dto)
+    async def publish_invitation(member_id:int):
+        channel = f"invitations:{member_id}"
+        await redis.publish(channel, "Invitation created")
+    background_tasks.add_task(publish_invitation, invitation.member_id)
 
 @router.put("/{organization_invitation_id}/{status}", status_code=status.HTTP_200_OK)
 @inject
@@ -50,7 +52,9 @@ async def update_organization_invitation(
         response: Response,
         organization_invitation_id: int,
         status_literal: Literal["accept", "reject"],
+        background_tasks: BackgroundTasks,
         db: AsyncSession = Depends(get_db),
+        redis: Redis = Depends(get_redis),
         organization_invitation_service: OrganizationInvitationService = Depends(Provide[Container.organization_invitation_service])
 ):
     me = await get_current_user_from_cookie(request, response, db)
@@ -63,6 +67,10 @@ async def update_organization_invitation(
         case _:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
     await organization_invitation_service.update(db, me, organization_invitation_id, status_enum)
+    async def publish_invitation():
+        channel = f"invitations:{me.id}"
+        await redis.publish(channel, "Invitation modified")
+    background_tasks.add_task(publish_invitation)
 
 @router.get("/", response_model=List[OrganizationInvitationResponseDto])
 @inject
@@ -88,7 +96,7 @@ async def subscribe_to_invitations(
         ),
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
-    channel = f"invitation:{me_dto.id}"
+    channel = f"invitations:{me_dto.id}"
 
     async def event_generator():
         async with redis_client.pubsub() as pubsub:
@@ -100,5 +108,6 @@ async def subscribe_to_invitations(
                 if message:
                     invitations = await organization_invitation_service.get_invitations(db, me_dto)
                     response_data = [invitation.model_dump() for invitation in invitations]
-                    yield {"event": "new_invitation", "data": response_data}
+                    json_response = json.dumps(response_data)
+                    yield {"data": json_response}
     return EventSourceResponse(event_generator())
