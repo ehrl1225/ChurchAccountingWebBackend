@@ -4,11 +4,11 @@ from typing import BinaryIO
 class StorageService(ABC):
 
     @abstractmethod
-    def create_presigned_post_url(self, object_name: str):
+    async def create_presigned_post_url(self, object_name: str) -> str:
         pass
 
     @abstractmethod
-    def create_presigned_get_url(self, object_name: str):
+    async def create_presigned_get_url(self, object_name: str) -> str:
         pass
 
     @abstractmethod

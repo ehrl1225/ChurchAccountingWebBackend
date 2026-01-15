@@ -17,7 +17,7 @@ class S3StorageService(StorageService):
             region_name=settings.REGION_NAME,
         )
 
-    def create_presigned_post_url(self, object_name: str):
+    async def create_presigned_post_url(self, object_name: str):
         conditions = [
             ["content-length-range", 0, 10 * 1024 * 1024],
         ]
@@ -32,12 +32,13 @@ class S3StorageService(StorageService):
             return None
         return response
 
-    def create_presigned_get_url(self, object_name: str):
+    async def create_presigned_get_url(self, object_name: str):
         try:
-            response = self.s3_client.generate_presigned_url("get_object",
-                                                             Params={"Bucket": settings.BUCKET_NAME,
-                                                                     "Key": object_name},
-                                                             ExpiresIn=3600)
+            response = self.s3_client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": settings.BUCKET_NAME,
+                        "Key": object_name},
+                ExpiresIn=3600)
         except ClientError as err:
             return None
         return response

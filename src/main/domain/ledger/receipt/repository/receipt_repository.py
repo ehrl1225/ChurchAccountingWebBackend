@@ -22,7 +22,6 @@ class ReceiptRepository:
             create_receipt_dto: CreateReceiptDto
     ):
         receipt = Receipt(
-            receipt_image_url=create_receipt_dto.receipt_image_url,
             paper_date=create_receipt_dto.paper_date,
             actual_date=create_receipt_dto.actual_date,
             name=create_receipt_dto.name,
@@ -51,26 +50,41 @@ class ReceiptRepository:
         receipt = await db.get(Receipt, receipt_id)
         return receipt
 
+    async def find_by_id_with_file(self, db:AsyncSession, receipt_id:int) -> Optional[Receipt]:
+        query = (
+            select(Receipt)
+            .options(
+                joinedload(Receipt.file)
+            )
+            .filter(Receipt.file_id==receipt_id)
+        )
+        result = await db.execute(query)
+        return result.scalar_one_or_none()
+
     async def find_all(self, db:AsyncSession, organization_id: int, year:int) -> list[Receipt]:
-        query = (select(Receipt)
-                 .options(
-                    joinedload(Receipt.category),
-                            joinedload(Receipt.item),
-                            joinedload(Receipt.event),)
-                 .filter(Receipt.organization_id==organization_id)
-                 .filter(Receipt.year==year))
+        query = (
+            select(Receipt)
+            .options(
+                joinedload(Receipt.category),
+                joinedload(Receipt.item),
+                joinedload(Receipt.event),
+                joinedload(Receipt.file)
+            )
+            .filter(Receipt.organization_id==organization_id)
+            .filter(Receipt.year==year))
         result = await db.execute(query)
         return result.scalars().all()
 
     async def find_amount_by_month(self, db:AsyncSession, organization_id: int, year:int, month:int) -> list[SummaryData]:
-        query = (select(Category, Item, func.sum(Receipt.amount).label("total_amount"))
-                 .join(Item, Receipt.item_id == Item.id)
-                 .join(Category, Receipt.category_id == Category.id)
-                 .filter(Receipt.organization_id==organization_id)
-                 .filter(Receipt.year==year)
-                 .filter(extract("month", Receipt.paper_date) == month)
-                 .group_by(Category.id, Item.id)
-                 )
+        query = (
+            select(Category, Item, func.sum(Receipt.amount).label("total_amount"))
+            .join(Item, Receipt.item_id == Item.id)
+            .join(Category, Receipt.category_id == Category.id)
+            .filter(Receipt.organization_id==organization_id)
+            .filter(Receipt.year==year)
+            .filter(extract("month", Receipt.paper_date) == month)
+            .group_by(Category.id, Item.id)
+        )
         result = await db.execute(query)
         data = result.all()
         if data == [(None, None, None)]:
@@ -78,13 +92,14 @@ class ReceiptRepository:
         return [SummaryData(category=category, item=item, total_amount=total_amount) for category, item, total_amount in data]
 
     async def find_all_amount(self, db:AsyncSession, organization_id: int, year:int) -> list[SummaryData]:
-        query = (select(Category, Item, func.sum(Receipt.amount).label("total_amount"))
-                 .join(Item, Receipt.item_id == Item.id)
-                 .join(Category, Receipt.category_id == Category.id)
-                 .filter(Receipt.organization_id==organization_id)
-                 .filter(Receipt.year==year)
-                 .group_by(Category.id, Item.id)
-                 )
+        query = (
+            select(Category, Item, func.sum(Receipt.amount).label("total_amount"))
+            .join(Item, Receipt.item_id == Item.id)
+            .join(Category, Receipt.category_id == Category.id)
+            .filter(Receipt.organization_id==organization_id)
+            .filter(Receipt.year==year)
+            .group_by(Category.id, Item.id)
+        )
         result = await db.execute(query)
         data = result.all()
         if data == [(None, None, None)]:
@@ -92,13 +107,14 @@ class ReceiptRepository:
         return [SummaryData(category, item, total_amount) for category, item, total_amount in data]
 
     async def find_by_event(self, db:AsyncSession, organization_id: int, year:int, event_id:int):
-        query = (select(Category, Item, func.sum(Receipt.amount).label("total_amount"))
-                 .join(Item, Receipt.item_id == Item.id)
-                 .join(Category, Receipt.category_id == Category.id)
-                 .filter(Receipt.organization_id==organization_id)
-                 .filter(Receipt.year==year)
-                 .filter(Receipt.event_id==event_id)
-                 )
+        query = (
+            select(Category, Item, func.sum(Receipt.amount).label("total_amount"))
+            .join(Item, Receipt.item_id == Item.id)
+            .join(Category, Receipt.category_id == Category.id)
+            .filter(Receipt.organization_id==organization_id)
+            .filter(Receipt.year==year)
+            .filter(Receipt.event_id==event_id)
+        )
         result = await db.execute(query)
         data = result.all()
         if data == [(None, None, None)]:
@@ -106,13 +122,14 @@ class ReceiptRepository:
         return [SummaryData(category=category, item=item, total_amount=total_amount) for category, item, total_amount in data]
 
     async def find_all_by_event(self, db:AsyncSession, organization_id: int, year:int):
-        query = (select(Category, Item, func.sum(Receipt.amount).label("total_amount"))
-                 .join(Item, Receipt.item_id == Item.id)
-                 .join(Category, Receipt.category_id == Category.id)
-                 .filter(Receipt.organization_id==organization_id)
-                 .filter(Receipt.year==year)
-                 .filter(Receipt.event_id!=None)
-                 )
+        query = (
+            select(Category, Item, func.sum(Receipt.amount).label("total_amount"))
+            .join(Item, Receipt.item_id == Item.id)
+            .join(Category, Receipt.category_id == Category.id)
+            .filter(Receipt.organization_id==organization_id)
+            .filter(Receipt.year==year)
+            .filter(Receipt.event_id!=None)
+        )
         result = await db.execute(query)
         data = result.all()
         if data == [(None, None, None)]:
@@ -132,6 +149,7 @@ class ReceiptRepository:
         receipt.etc = edit_receipt_dto.etc
         await db.flush()
         await db.refresh(receipt)
+        return receipt
 
     async def delete(self, db:AsyncSession, receipt:Receipt):
         await db.delete(receipt)

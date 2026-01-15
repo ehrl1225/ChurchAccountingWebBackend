@@ -7,6 +7,7 @@ from common.database import TxType
 
 
 class EditReceiptDto(BaseModel):
+    receipt_image_id: Optional[int]
     organization_id: int
     receipt_id: int
     receipt_image_url: Optional[str]

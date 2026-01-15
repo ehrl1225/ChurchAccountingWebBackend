@@ -1,5 +1,6 @@
 import uuid
 import os
+from typing import Optional
 
 from fastapi import HTTPException, status, UploadFile, File
 from rq import Queue
@@ -7,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import shutil
 
 from common.database import TxType
+from domain.file.file.entity import FileInfo
+from domain.file.file.repository import FileRepository
 from domain.ledger.category.category.repository import CategoryRepository
 from domain.ledger.category.item.repository import ItemRepository
 from domain.ledger.event.repository import EventRepository
@@ -21,6 +24,7 @@ from domain.ledger.receipt.dto.response.receipt_summary_category_dto import Rece
 from domain.ledger.receipt.dto.response.receipt_summary_dto import ReceiptSummaryDto
 from domain.ledger.receipt.dto.response.receipt_summary_item_dto import ReceiptSummaryItemDto
 from domain.ledger.receipt.repository import ReceiptRepository
+from domain.ledger.receipt.entity import Receipt
 from domain.member.repository import MemberRepository
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository
 from domain.organization.organization.repository import OrganizationRepository
@@ -37,6 +41,7 @@ class ReceiptService:
             organization_repository: OrganizationRepository,
             member_repository: MemberRepository,
             joined_organization_repository: JoinedOrganizationRepository,
+            file_repository: FileRepository,
             redis_queue:Queue,
     ):
         self.receipt_repository = receipt_repository
@@ -46,9 +51,10 @@ class ReceiptService:
         self.organization_repository = organization_repository
         self.member_repository = member_repository
         self.joined_organization_repository = joined_organization_repository
+        self.file_repository = file_repository
         self.redis_queue = redis_queue
 
-    async def create_receipt(self, db: AsyncSession, create_receipt_dto:CreateReceiptDto):
+    async def create_receipt(self, db: AsyncSession, create_receipt_dto:CreateReceiptDto) -> Receipt:
         # verify
         if create_receipt_dto.amount < 0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="amount must be greater than 0")
@@ -84,10 +90,17 @@ class ReceiptService:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
         # work
-        await self.receipt_repository.create_receipt(
+        receipt = await self.receipt_repository.create_receipt(
             db,
             create_receipt_dto
         )
+        if create_receipt_dto.receipt_image_id is not None:
+            file_info = await self.file_repository.find_by_id(db, create_receipt_dto.receipt_image_id)
+            if file_info is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+            await self.file_repository.update_file_info(db, file_info, receipt.id)
+
+
 
     async def upload_excel(
             self,
@@ -117,7 +130,7 @@ class ReceiptService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Organization start year must be in range")
 
         # work
-        receipts = await self.receipt_repository.find_all(
+        receipts:list[Receipt] = await self.receipt_repository.find_all(
             db=db,
             organization_id=search_receipt_params.organization_id,
             year=search_receipt_params.year,)
@@ -127,6 +140,11 @@ class ReceiptService:
             receipt_dto.category_name = receipt.category.name
             receipt_dto.item_name = receipt.item.name
             receipt_dto.amount = abs(receipt.amount)
+            file:Optional[FileInfo] = receipt.file
+            if file is not None:
+                receipt_dto.receipt_image_id = file.id
+                receipt_dto.receipt_image_file_name = file.file_name
+
             if receipt_dto.event_id is not None:
                 receipt_dto.event_name = receipt.event.name
             receipt_dtos.append(receipt_dto)
@@ -213,7 +231,7 @@ class ReceiptService:
             categories=receipt_category_dtos
         )
 
-    async def update(self, db: AsyncSession, edit_receipt_dto: EditReceiptDto):
+    async def update(self, db: AsyncSession, edit_receipt_dto: EditReceiptDto) -> Receipt:
         # verify
         organization = await self.organization_repository.find_by_id(db, edit_receipt_dto.organization_id)
         if organization is None:
@@ -247,8 +265,16 @@ class ReceiptService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="amount cannot be positive")
 
         # work
-        receipt = await self.receipt_repository.find_by_id(db, edit_receipt_dto.receipt_id)
-        await self.receipt_repository.update(db, receipt, edit_receipt_dto)
+        receipt = await self.receipt_repository.find_by_id_with_file(db, edit_receipt_dto.receipt_id)
+        receipt = await self.receipt_repository.update(db, receipt, edit_receipt_dto)
+        if edit_receipt_dto.receipt_image_id is not None:
+            file_info = await self.file_repository.find_by_id(db, edit_receipt_dto.receipt_image_id)
+            if file_info is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+            if receipt.file is not None:
+                old_file_info = receipt.file
+                await self.file_repository.update_file_info(db, old_file_info, None)
+            await self.file_repository.update_file_info(db, file_info, receipt.id)
 
     async def delete(self, db: AsyncSession, delete_receipt_dto:DeleteReceiptParams):
         organization = await self.organization_repository.find_by_id(db, delete_receipt_dto.organization_id)

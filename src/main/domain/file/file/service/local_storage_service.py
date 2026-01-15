@@ -1,18 +1,17 @@
 import requests
 from typing import BinaryIO
 from requests.exceptions import RequestException
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException, status
 
 from src.main.domain.file.file.service import StorageService
-from fastapi import HTTPException, status
 
 FILE_SERVER_URL: str = "http://localhost:8001"
 
 class LocalStorageService(StorageService):
 
-    def create_presigned_post_url(self, object_name: str):
+    async def create_presigned_post_url(self, object_name: str) -> str:
         try:
-            response = requests.post(f"{FILE_SERVER_URL}/file/url", timeout=5)
+            response = requests.post(f"{FILE_SERVER_URL}/file/url/{object_name}", timeout=5)
             response.raise_for_status()
             response_json = response.json()
             if "file_url" not in response_json:
@@ -22,9 +21,9 @@ class LocalStorageService(StorageService):
             pass
 
 
-    def create_presigned_get_url(self, object_name: str):
+    async def create_presigned_get_url(self, object_name: str) -> str:
         try:
-            response = requests.get(f"{FILE_SERVER_URL}/url", timeout=5)
+            response = requests.get(f"{FILE_SERVER_URL}/file/url/{object_name}", timeout=5)
             response.raise_for_status()
             response_json = response.json()
             if "file_url" not in response_json:

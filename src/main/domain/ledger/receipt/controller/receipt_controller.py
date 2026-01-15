@@ -1,6 +1,5 @@
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, Request, Response, status, UploadFile, File
-from sqlalchemy.orm import Session
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 
