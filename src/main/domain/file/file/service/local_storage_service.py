@@ -1,24 +1,27 @@
 import requests
-from typing import BinaryIO
+from typing import BinaryIO, Optional
 from requests.exceptions import RequestException
 from fastapi import HTTPException, status
 
+from domain.file.file.dto.file_info_post import FileInfoPost
 from src.main.domain.file.file.service import StorageService
 
 FILE_SERVER_URL: str = "http://localhost:8001"
 
 class LocalStorageService(StorageService):
 
-    async def create_presigned_post_url(self, object_name: str) -> str:
+    async def create_presigned_post_url(self, object_name: str) -> Optional[FileInfoPost]:
         try:
             response = requests.post(f"{FILE_SERVER_URL}/file/url/{object_name}", timeout=5)
             response.raise_for_status()
             response_json = response.json()
             if "file_url" not in response_json:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
-            return response_json["file_url"]
+            return FileInfoPost(
+                url=response_json["file_url"],
+            )
         except RequestException as err:
-            pass
+            return None
 
 
     async def create_presigned_get_url(self, object_name: str) -> str:

@@ -2,7 +2,7 @@ import uuid
 import os
 from typing import Optional
 
-from fastapi import HTTPException, status, UploadFile, File
+from fastapi import HTTPException, status, UploadFile
 from rq import Queue
 from sqlalchemy.ext.asyncio import AsyncSession
 import shutil
@@ -16,8 +16,7 @@ from domain.ledger.event.repository import EventRepository
 from domain.ledger.receipt.dto import CreateReceiptDto, SummaryType
 from domain.ledger.receipt.dto.request.delete_receipt_params import DeleteReceiptParams
 from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
-from domain.ledger.receipt.dto.response import SummaryData
-from domain.ledger.receipt.dto.response.receipt_response_dto import ReceiptResponseDto
+from domain.ledger.receipt.dto.response import SummaryData, ReceiptResponseDto
 from domain.ledger.receipt.dto.request.search_receipt_params import SearchAllReceiptParams
 from domain.ledger.receipt.dto.request.receipt_summary_params import ReceiptSummaryParams
 from domain.ledger.receipt.dto.response.receipt_summary_category_dto import ReceiptSummaryCategoryDto
@@ -54,7 +53,7 @@ class ReceiptService:
         self.file_repository = file_repository
         self.redis_queue = redis_queue
 
-    async def create_receipt(self, db: AsyncSession, create_receipt_dto:CreateReceiptDto) -> Receipt:
+    async def create_receipt(self, db: AsyncSession, create_receipt_dto:CreateReceiptDto) -> ReceiptResponseDto:
         # verify
         if create_receipt_dto.amount < 0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="amount must be greater than 0")
@@ -94,13 +93,20 @@ class ReceiptService:
             db,
             create_receipt_dto
         )
+        file_info = None
         if create_receipt_dto.receipt_image_id is not None:
             file_info = await self.file_repository.find_by_id(db, create_receipt_dto.receipt_image_id)
             if file_info is None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
             await self.file_repository.update_file_info(db, file_info, receipt.id)
-
-
+        receipt_dto = ReceiptResponseDto.model_validate(receipt)
+        receipt_dto.category_name = category.name
+        receipt_dto.item_name = item.name
+        receipt_dto.amount = abs(receipt.amount)
+        if file_info is not None:
+            receipt_dto.receipt_image_id = file_info.id
+            receipt_dto.receipt_image_file_name = file_info.file_name
+        return receipt_dto
 
     async def upload_excel(
             self,
@@ -231,7 +237,7 @@ class ReceiptService:
             categories=receipt_category_dtos
         )
 
-    async def update(self, db: AsyncSession, edit_receipt_dto: EditReceiptDto) -> Receipt:
+    async def update(self, db: AsyncSession, edit_receipt_dto: EditReceiptDto) -> ReceiptResponseDto:
         # verify
         organization = await self.organization_repository.find_by_id(db, edit_receipt_dto.organization_id)
         if organization is None:
@@ -253,20 +259,19 @@ class ReceiptService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Receipt not found")
         if receipt.organization_id != edit_receipt_dto.organization_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="receipt is not belong to organization")
-        if receipt.item_id != item.id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="receipt is not belong to item")
         if edit_receipt_dto.paper_date.year != category.year:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="year must follow category year")
         if edit_receipt_dto.actual_date is not None and edit_receipt_dto.actual_date.year != receipt.year:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="year must be in range")
-        if edit_receipt_dto.tx_type == TxType.INCOME and edit_receipt_dto.amount <0:
+        if  edit_receipt_dto.amount <0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="amount cannot be negative")
-        if edit_receipt_dto.tx_type == TxType.OUTCOME and edit_receipt_dto.amount > 0:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="amount cannot be positive")
+        if edit_receipt_dto.tx_type == TxType.OUTCOME:
+            edit_receipt_dto.amount = -edit_receipt_dto.amount
 
         # work
         receipt = await self.receipt_repository.find_by_id_with_file(db, edit_receipt_dto.receipt_id)
         receipt = await self.receipt_repository.update(db, receipt, edit_receipt_dto)
+        file_info = None
         if edit_receipt_dto.receipt_image_id is not None:
             file_info = await self.file_repository.find_by_id(db, edit_receipt_dto.receipt_image_id)
             if file_info is None:
@@ -275,6 +280,14 @@ class ReceiptService:
                 old_file_info = receipt.file
                 await self.file_repository.update_file_info(db, old_file_info, None)
             await self.file_repository.update_file_info(db, file_info, receipt.id)
+        receipt_dto = ReceiptResponseDto.model_validate(receipt)
+        receipt_dto.category_name = category.name
+        receipt_dto.item_name = item.name
+        receipt_dto.amount = abs(receipt.amount)
+        if file_info is not None:
+            receipt_dto.receipt_image_id = file_info.id
+            receipt_dto.receipt_image_file_name = file_info.file_name
+        return receipt_dto
 
     async def delete(self, db: AsyncSession, delete_receipt_dto:DeleteReceiptParams):
         organization = await self.organization_repository.find_by_id(db, delete_receipt_dto.organization_id)

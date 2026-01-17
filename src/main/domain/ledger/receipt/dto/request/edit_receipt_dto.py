@@ -10,7 +10,6 @@ class EditReceiptDto(BaseModel):
     receipt_image_id: Optional[int]
     organization_id: int
     receipt_id: int
-    receipt_image_url: Optional[str]
     paper_date: date
     actual_date: Optional[date]
     name: str

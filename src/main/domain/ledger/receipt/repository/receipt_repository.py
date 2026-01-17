@@ -56,7 +56,7 @@ class ReceiptRepository:
             .options(
                 joinedload(Receipt.file)
             )
-            .filter(Receipt.file_id==receipt_id)
+            .filter(Receipt.id==receipt_id)
         )
         result = await db.execute(query)
         return result.scalar_one_or_none()
@@ -71,7 +71,10 @@ class ReceiptRepository:
                 joinedload(Receipt.file)
             )
             .filter(Receipt.organization_id==organization_id)
-            .filter(Receipt.year==year))
+            .filter(Receipt.year==year)
+            .order_by(Receipt.paper_date)
+        )
+
         result = await db.execute(query)
         return result.scalars().all()
 
@@ -137,7 +140,6 @@ class ReceiptRepository:
         return [SummaryData(category=category, item=item, total_amount=total_amount) for category, item, total_amount in data]
 
     async def update(self, db:AsyncSession, receipt:Receipt, edit_receipt_dto:EditReceiptDto):
-        receipt.receipt_image_url = edit_receipt_dto.receipt_image_url
         receipt.paper_date = edit_receipt_dto.paper_date
         receipt.actual_date = edit_receipt_dto.actual_date
         receipt.name = edit_receipt_dto.name

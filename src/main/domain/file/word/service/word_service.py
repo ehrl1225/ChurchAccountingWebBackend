@@ -95,6 +95,7 @@ class WordService:
 
         table = doc.add_table(rows=total_row_count, cols=6)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
         first_line_items = ["구 분", "항 목", "내 용", "금 액", "비 고"]
         mergeCell(table.cell(0, 3), table.cell(0, 4))
         for col in [i for i in range(6) if i != 4]:
@@ -105,7 +106,7 @@ class WordService:
                 setCellBorder(cell, start=single, end=single_bold)
             else:
                 setCellBorder(cell, start=single)
-            setCellBorder(cell, top=single_bold, bottom=double)
+            setCellBorder(cell, top=single_bold, bottom=single_bold)
             setCellColor(cell, cell_color)
             if col < 4:
                 setCellText(cell, first_line_items[col], style_3, WD_ALIGN_PARAGRAPH.CENTER, WD_ALIGN_VERTICAL.CENTER)
@@ -114,7 +115,7 @@ class WordService:
         self.setCategories(
             table,
             style_3,
-            "\n수\n\n입",
+            "수\n\n입",
             income_categories,
             income_start_row_index,
             income_items_count,
@@ -125,7 +126,7 @@ class WordService:
         self.setCategories(
             table,
             style_3,
-            "\n지\n\n출",
+            "지\n\n출",
             outcome_categories,
             outcome_start_row_index,
             outcome_items_count,
@@ -196,6 +197,11 @@ class WordService:
 
         mergeCell(remain_total_sum_cell, remain_total_sum_be_merge_cell)
         mergeCell(remain_total_sum_amount_cell, remain_total_sum_amount_be_merge_cell)
+
+        for row in table.rows:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    paragraph.paragraph_format.line_spacing = 1.0
 
         doc.add_paragraph(" ")
         doc.paragraphs[3].runs[0].add_break(docx.text.run.WD_BREAK.PAGE)
