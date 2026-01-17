@@ -7,7 +7,7 @@ from common.database import TxType
 
 
 class CreateReceiptDto(BaseModel):
-    receipt_image_url: Optional[str]
+    receipt_image_id: Optional[int]
     paper_date: date
     actual_date: Optional[date]
     name: str

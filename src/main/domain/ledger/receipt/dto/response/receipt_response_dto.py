@@ -8,7 +8,8 @@ from common.database import TxType
 
 class ReceiptResponseDto(BaseModel):
     id : int
-    receipt_image_url: Optional[str] = None
+    receipt_image_id: Optional[int] = None
+    receipt_image_file_name: Optional[str] = None
     paper_date: date
     actual_date: Optional[date] = None
     name: str

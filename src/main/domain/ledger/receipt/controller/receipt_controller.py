@@ -1,6 +1,5 @@
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, Request, Response, status, UploadFile, File
-from sqlalchemy.orm import Session
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -72,7 +71,8 @@ async def get_all_receipts(
         organization_id=params.organization_id,
         member_role_mask=OWNER2READ_MASK
     )
-    return await receipt_service.get_all_receipts(db, params)
+    data = await receipt_service.get_all_receipts(db, params)
+    return data
 
 @router.get("/summary")
 @inject
@@ -108,7 +108,8 @@ async def update_receipt(
         organization_id=edit_receipt_dto.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK
     )
-    await receipt_service.update(db, edit_receipt_dto)
+    data = await receipt_service.update(db, edit_receipt_dto)
+    return data
 
 @router.delete("/")
 @inject

@@ -166,7 +166,7 @@ async def init_test_database(db:AsyncSession):
                 await receipt_repository.create_receipt(
                     db=db,
                     create_receipt_dto=CreateReceiptDto(
-                        receipt_image_url=None,
+                        receipt_image_id=None,
                         paper_date=date(year=2025, month=1, day=1),
                         actual_date=None,
                         name=f"receipt_{i}",

@@ -39,3 +39,7 @@ class Organization(BaseEntity):
         "Receipt",
         back_populates="organization"
     )
+    files: Mapped[list["FileInfo"]] = relationship(
+        "FileInfo",
+        back_populates="organization"
+    )

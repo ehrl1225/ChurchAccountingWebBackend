@@ -8,7 +8,6 @@ from datetime import date
 class Receipt(BaseEntity):
     __tablename__ = "receipt"
 
-    receipt_image_url: Mapped[str] = mapped_column(String, nullable=True)
     paper_date: Mapped[date] = mapped_column(Date, nullable=False)
     actual_date: Mapped[date] = mapped_column(Date, nullable=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
@@ -36,6 +35,10 @@ class Receipt(BaseEntity):
     organization: Mapped["Organization"] = relationship(
         "Organization",
         back_populates="receipts"
+    )
+    file: Mapped["FileInfo"] = relationship(
+        "FileInfo",
+        back_populates="receipt"
     )
 
 

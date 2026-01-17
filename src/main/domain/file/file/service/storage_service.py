@@ -1,14 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import BinaryIO
+from typing import BinaryIO, Optional
+
+from domain.file.file.dto.file_info_post import FileInfoPost
+
 
 class StorageService(ABC):
 
     @abstractmethod
-    def create_presigned_post_url(self, object_name: str):
+    async def create_presigned_post_url(self, object_name: str) -> Optional[FileInfoPost]:
         pass
 
     @abstractmethod
-    def create_presigned_get_url(self, object_name: str):
+    async def create_presigned_get_url(self, object_name: str) -> str:
         pass
 
     @abstractmethod

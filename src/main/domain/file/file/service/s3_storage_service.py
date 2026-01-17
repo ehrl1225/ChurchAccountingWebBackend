@@ -1,10 +1,11 @@
 import boto3
-from typing import BinaryIO
+from typing import BinaryIO, Optional
 from botocore.exceptions import ClientError
 from fastapi import HTTPException, status
 from mypy_boto3_s3.client import S3Client
 
 from common.env import settings
+from domain.file.file.dto.file_info_post import FileInfoPost
 from domain.file.file.service import StorageService
 
 class S3StorageService(StorageService):
@@ -17,7 +18,7 @@ class S3StorageService(StorageService):
             region_name=settings.REGION_NAME,
         )
 
-    def create_presigned_post_url(self, object_name: str):
+    async def create_presigned_post_url(self, object_name: str) -> Optional[FileInfoPost]:
         conditions = [
             ["content-length-range", 0, 10 * 1024 * 1024],
         ]
@@ -30,14 +31,18 @@ class S3StorageService(StorageService):
             )
         except ClientError as err:
             return None
-        return response
+        return FileInfoPost(
+            url=response["url"],
+            fields=response["fields"],
+        )
 
-    def create_presigned_get_url(self, object_name: str):
+    async def create_presigned_get_url(self, object_name: str):
         try:
-            response = self.s3_client.generate_presigned_url("get_object",
-                                                             Params={"Bucket": settings.BUCKET_NAME,
-                                                                     "Key": object_name},
-                                                             ExpiresIn=3600)
+            response = self.s3_client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": settings.BUCKET_NAME,
+                        "Key": object_name},
+                ExpiresIn=3600)
         except ClientError as err:
             return None
         return response
