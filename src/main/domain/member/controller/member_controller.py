@@ -1,10 +1,8 @@
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, Response, Request, status
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import get_db
-from common.dependency_injector import Container
 from common.security.email_token import verify_token
 from common.env import settings
 from common.security.member_DTO import MemberDTO
@@ -12,6 +10,7 @@ from domain.member.dto import RegisterFormDTO, LoginFormDTO
 from domain.member.service import MemberService
 from domain.member.service.auth_service import AuthService
 from common.security.rq import get_current_user_from_cookie
+from common.dependency_injector import Container
 
 router = APIRouter(prefix="/member", tags=["member"])
 

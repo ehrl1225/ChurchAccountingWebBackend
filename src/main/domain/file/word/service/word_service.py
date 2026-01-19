@@ -1,7 +1,6 @@
 from docx.shared import Cm
 
 from domain.organization.organization.repository import OrganizationRepository
-from domain.organization.organization.service import OrganizationService
 from .word_util import *
 from docx.enum.table import WD_TABLE_ALIGNMENT
 import io

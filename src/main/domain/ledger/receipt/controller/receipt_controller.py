@@ -12,7 +12,8 @@ from domain.ledger.receipt.dto.request.delete_receipt_params import DeleteReceip
 from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
 from domain.ledger.receipt.dto.request.search_receipt_params import SearchAllReceiptParams
 from domain.ledger.receipt.dto.request.receipt_summary_params import ReceiptSummaryParams
-from domain.ledger.receipt.service import ReceiptService
+from domain.ledger.receipt.dto.request.upload_receipt_dto import UploadReceiptDto
+from domain.ledger.receipt.service import ReceiptService, receipt_service
 
 router = APIRouter(prefix="/ledger/receipt", tags=["receipt"])
 
@@ -35,14 +36,12 @@ async def create_receipt(
     )
     await receipt_service.create_receipt(db, create_receipt_dto)
 
-@router.post("/upload/{organization_id}/{year}")
+@router.post("/upload")
 @inject
 async def upload_receipt_excel(
         request: Request,
         response: Response,
-        organization_id: int,
-        year: int,
-        upload_file: UploadFile = File(...),
+        upload_receipt_dto: UploadReceiptDto,
         db: AsyncSession = Depends(get_db),
         receipt_service:ReceiptService = Depends(Provide[Container.receipt_service])
 ):
@@ -50,10 +49,30 @@ async def upload_receipt_excel(
     await check_member_role(
         db=db,
         member_id=me_dto.id,
-        organization_id=organization_id,
+        organization_id=upload_receipt_dto.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK
     )
-    await receipt_service.upload_excel(upload_file, organization_id, year)
+    await receipt_service.upload_excel(upload_receipt_dto)
+
+@router.get("/download/{organization_id}/{year}")
+@inject
+async def download_receipt_excel(
+        request: Request,
+        response: Response,
+        organization_id: int,
+        year: int,
+        db: AsyncSession=  Depends(get_db),
+        receipt_service:ReceiptService = Depends(Provide[Container.receipt_service])
+):
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=organization_id,
+        member_role_mask=OWNER2READ_MASK
+    )
+    await receipt_service.download_excel(organization_id, year)
+
 
 @router.get("/all")
 @inject
