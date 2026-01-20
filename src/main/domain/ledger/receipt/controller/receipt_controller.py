@@ -1,7 +1,12 @@
+import asyncio
+import json
+
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, Request, Response, status, UploadFile, File
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
+from redis.asyncio import Redis
+from sse_starlette import EventSourceResponse
 
 from common.database import get_db
 from common.database.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
@@ -54,7 +59,7 @@ async def upload_receipt_excel(
     )
     await receipt_service.upload_excel(upload_receipt_dto)
 
-@router.get("/download/{organization_id}/{year}")
+@router.post("/download/{organization_id}/{year}")
 @inject
 async def download_receipt_excel(
         request: Request,
@@ -71,7 +76,43 @@ async def download_receipt_excel(
         organization_id=organization_id,
         member_role_mask=OWNER2READ_MASK
     )
-    await receipt_service.download_excel(organization_id, year)
+    data = await receipt_service.download_excel(organization_id, year)
+    return data
+
+
+@router.get("/download/subscribe/{file_name}", summary="엑셀 다운로드 작업 상태 실시간 구도게")
+@inject
+async def download_receipt_subscribe(
+        request: Request,
+        file_name: str,
+        redis: Redis = Depends(Provide[Container.redis_client])
+):
+    async def event_generator():
+        initial_result = await redis.get(f"file_name:{file_name}")
+        if initial_result:
+            data = json.loads(initial_result)
+            if data["status"] in ["completed", "failed"]:
+                yield {"event": "job_update", "data": json.dumps(data)}
+                return
+        pubsub = redis.pubsub()
+        await pubsub.subscribe(f"excel_download:{file_name}")
+        try:
+            while True:
+                if await request.is_disconnected():
+                    await pubsub.unsubscribe(f"excel_download:{file_name}")
+                    break
+                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                if message:
+                    final_result = await redis.get(f"file_name:{file_name}")
+                    if final_result:
+                        yield {"event": "job_update", "data": final_result}
+                        break
+                yield {"event": "ping", "data": "ping"}
+        except asyncio.CancelledError:
+            await pubsub.unsubscribe(f"excel_download:{file_name}")
+            raise
+    return EventSourceResponse(event_generator())
+
 
 
 @router.get("/all")

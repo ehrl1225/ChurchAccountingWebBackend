@@ -36,7 +36,7 @@ async def get_presigned_post_url(
     )
     ext = pathlib.Path(create_file_info.file_name).suffix
     file_name = f"{uuid.uuid4().hex}{ext}"
-    object_name = f"{file_type.value}/{create_file_info.organization_id}/{file_name}"
+    object_name = f"{file_type.value}/{create_file_info.organization_id}/{create_file_info.year}/{file_name}"
     file_info = await file_service.create_file_info(db, create_file_info, file_name)
     url = await storage_service.create_presigned_post_url(object_name)
     return FileInfoResponseDto(
@@ -46,13 +46,14 @@ async def get_presigned_post_url(
         fields=url.fields,
     )
 
-@router.get("/url/{file_type}/get/{organization_id}/{file_name:path}")
+@router.get("/url/{file_type}/get/{organization_id}/{year}/{file_name:path}")
 @inject
 async def get_presigned_get_url(
         request: Request,
         response: Response,
         file_type: FileType,
         organization_id: int,
+        year: int,
         file_name: str,
         db: AsyncSession = Depends(get_db),
         storage_service: StorageService = Depends(Provide[Container.storage_service]),
@@ -64,7 +65,7 @@ async def get_presigned_get_url(
         organization_id=organization_id,
         member_role_mask=OWNER2READ_MASK,
     )
-    object_name = f"/{file_type.value}/{organization_id}/{file_name}"
+    object_name = f"/{file_type.value}/{organization_id}/{year}/{file_name}"
     url =await storage_service.create_presigned_get_url(object_name)
 
     return FileInfoResponseDto(
