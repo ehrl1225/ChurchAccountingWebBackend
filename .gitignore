@@ -1,10 +1,7 @@
 .idea
 .venv
 .env
-.env.dev
-.env.prod
-.env.test
-.env.migrate
+.env.*
 db.sqlite3
 **__pycache__
 postgres_data

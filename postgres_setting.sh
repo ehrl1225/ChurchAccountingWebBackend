@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
 CREATE ROLE church_account LOGIN PASSWORD 'password';
 CREATE ROLE migration LOGIN PASSWORD 'password';
 
@@ -15,3 +18,4 @@ ALTER DEFAULT PRIVILEGES FOR ROLE migration IN SCHEMA public
 
 ALTER DEFAULT PRIVILEGES FOR ROLE migration IN SCHEMA public
     GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO church_account;
+EOSQL

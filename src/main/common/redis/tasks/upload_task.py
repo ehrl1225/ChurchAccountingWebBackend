@@ -1,10 +1,15 @@
+from typing import Optional
+
 import numpy as np
 import pandas as pd
-import os
+import io
+import httpx
 
-from common.database import SessionLocal, TxType
 import asyncio
 from datetime import date
+from common.env import settings
+from common.database import SessionLocal, TxType
+from domain.file.file.service import LocalStorageService, S3StorageService
 
 from domain.ledger.category.category.dto.request import CategoryCheck
 from domain.ledger.category.category.repository import CategoryRepository
@@ -16,21 +21,38 @@ from domain.ledger.event.entity import Event
 from domain.ledger.event.repository import EventRepository
 from domain.ledger.receipt.entity import Receipt
 from domain.ledger.receipt.repository import ReceiptRepository
+from domain.file.file.service import StorageService
 from domain.organization.organization.entity import Organization
 from domain.organization.organization_invitation.entity import OrganizationInvitation
 from domain.organization.joined_organization.entity import JoinedOrganization
 from domain.member.entity import Member
 
 
-async def async_process_excel(file_path: str, organization_id: int, year: int):
+
+async def async_process_excel(file_key: str, organization_id: int, year: int):
     category_repository = CategoryRepository()
     item_repository = ItemRepository()
     event_repository = EventRepository()
     receipt_repository = ReceiptRepository()
+    storage_service:Optional[StorageService] = None
+    match settings.PROFILE:
+        case "prod":
+            storage_service = S3StorageService()
+        case _:
+            storage_service = LocalStorageService()
+
     print("Processing excel receipt upload")
     async with SessionLocal() as db:
         try:
-            df = pd.read_excel(file_path)
+            excel_data = None
+            async with httpx.AsyncClient() as client:
+                file_get_url = await storage_service.create_presigned_get_url(file_key)
+                response = await client.get(file_get_url)
+                response.raise_for_status()
+                excel_data = io.BytesIO(response.content)
+            if excel_data is None:
+                return
+            df = pd.read_excel(excel_data)
             receipts_to_create:list[Receipt] = []
             categories_to_check:list[CategoryCheck] = []
             items_data_to_check:list[ItemCheck] = []
@@ -151,10 +173,7 @@ async def async_process_excel(file_path: str, organization_id: int, year: int):
             await db.rollback()
             raise e
         finally:
-            os.remove(file_path)
+            await storage_service.delete_file(file_key)
 
 def process_excel_receipt_upload(file_path: str, organization_id: int, year: int):
     asyncio.run(async_process_excel(file_path, organization_id, year))
-
-if __name__ == '__main__':
-    process_excel_receipt_upload("./todo/test.xlsx", 2, 2025)

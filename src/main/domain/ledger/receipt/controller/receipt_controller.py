@@ -1,7 +1,12 @@
+import asyncio
+import json
+
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, Request, Response, status, UploadFile, File
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
+from redis.asyncio import Redis
+from sse_starlette import EventSourceResponse
 
 from common.database import get_db
 from common.database.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
@@ -12,7 +17,8 @@ from domain.ledger.receipt.dto.request.delete_receipt_params import DeleteReceip
 from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
 from domain.ledger.receipt.dto.request.search_receipt_params import SearchAllReceiptParams
 from domain.ledger.receipt.dto.request.receipt_summary_params import ReceiptSummaryParams
-from domain.ledger.receipt.service import ReceiptService
+from domain.ledger.receipt.dto.request.upload_receipt_dto import UploadReceiptDto
+from domain.ledger.receipt.service import ReceiptService, receipt_service
 
 router = APIRouter(prefix="/ledger/receipt", tags=["receipt"])
 
@@ -35,14 +41,12 @@ async def create_receipt(
     )
     await receipt_service.create_receipt(db, create_receipt_dto)
 
-@router.post("/upload/{organization_id}/{year}")
+@router.post("/upload")
 @inject
 async def upload_receipt_excel(
         request: Request,
         response: Response,
-        organization_id: int,
-        year: int,
-        upload_file: UploadFile = File(...),
+        upload_receipt_dto: UploadReceiptDto,
         db: AsyncSession = Depends(get_db),
         receipt_service:ReceiptService = Depends(Provide[Container.receipt_service])
 ):
@@ -50,10 +54,66 @@ async def upload_receipt_excel(
     await check_member_role(
         db=db,
         member_id=me_dto.id,
-        organization_id=organization_id,
+        organization_id=upload_receipt_dto.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK
     )
-    await receipt_service.upload_excel(upload_file, organization_id, year)
+    await receipt_service.upload_excel(upload_receipt_dto)
+
+@router.post("/download/{organization_id}/{year}")
+@inject
+async def download_receipt_excel(
+        request: Request,
+        response: Response,
+        organization_id: int,
+        year: int,
+        db: AsyncSession=  Depends(get_db),
+        receipt_service:ReceiptService = Depends(Provide[Container.receipt_service])
+):
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=organization_id,
+        member_role_mask=OWNER2READ_MASK
+    )
+    data = await receipt_service.download_excel(organization_id, year)
+    return data
+
+
+@router.get("/download/subscribe/{file_name}", summary="엑셀 다운로드 작업 상태 실시간 구도게")
+@inject
+async def download_receipt_subscribe(
+        request: Request,
+        file_name: str,
+        redis: Redis = Depends(Provide[Container.redis_client])
+):
+    async def event_generator():
+        initial_result = await redis.get(f"file_name:{file_name}")
+        if initial_result:
+            data = json.loads(initial_result)
+            if data["status"] in ["completed", "failed"]:
+                yield {"event": "job_update", "data": json.dumps(data)}
+                return
+        pubsub = redis.pubsub()
+        await pubsub.subscribe(f"excel_download:{file_name}")
+        try:
+            while True:
+                if await request.is_disconnected():
+                    await pubsub.unsubscribe(f"excel_download:{file_name}")
+                    break
+                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                if message:
+                    final_result = await redis.get(f"file_name:{file_name}")
+                    if final_result:
+                        yield {"event": "job_update", "data": final_result}
+                        break
+                yield {"event": "ping", "data": "ping"}
+        except asyncio.CancelledError:
+            await pubsub.unsubscribe(f"excel_download:{file_name}")
+            raise
+    return EventSourceResponse(event_generator())
+
+
 
 @router.get("/all")
 @inject

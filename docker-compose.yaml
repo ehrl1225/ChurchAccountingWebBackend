@@ -12,14 +12,14 @@ services:
       TZ: "Asia/Seoul"
     volumes:
       - ./postgres_data:/var/lib/postgresql
-      - ./postgres_setting.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./postgres_setting.sh:/docker-entrypoint-initdb.d/init-db.sql
     ports:
       - "5432:5432"
     restart: unless-stopped
     
   redis:
     image: redis:7-alpine
-    container_name: "church_accounting_redis"
+    container_name: "redis"
     ports:
       - "6379:6379"
     env_file:
@@ -29,15 +29,20 @@ services:
       - ./redis-data:/data
     restart: unless-stopped
 
-#  api:
+#  migrate:
 #    build: .
-#    container_name: "church_accounting_api"
-#    command: uv run src.main.main:app --host 0.0.0.0 --port 8000 --reload
-#    volumes:
-#      - .:app
+#    container_name: "database_migrate"
+#    command: uv run alembic upgrade head
+#    depends_on:
+#      - postgres
+#
+#  web:
+#    build: .
+#    container_name: "church_accounting_web"
 #    ports:
 #      - "8000:8000"
 #    depends_on:
+#      - migrate
 #      - postgres
 #      - redis
 #    restart: unless-stopped
@@ -45,9 +50,7 @@ services:
 #  worker:
 #    build: .
 #    container_name: "church_accounting_worker"
-#    command: python src/main/common/redis/worker.py
-#    volumes:
-#      - .:/app
+#    command: uv run src/main/common/redis/worker.py
 #    depends_on:
 #      - redis
 #    restart: unless-stopped

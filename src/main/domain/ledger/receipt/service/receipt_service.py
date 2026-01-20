@@ -1,13 +1,14 @@
+import json
 import uuid
-import os
 from typing import Optional
-
 from fastapi import HTTPException, status, UploadFile
+from redis.asyncio import Redis
 from rq import Queue
 from sqlalchemy.ext.asyncio import AsyncSession
-import shutil
 
 from common.database import TxType
+from common.database.file_type import FileType
+from domain.file.file.dto.file_info_response_dto import FileInfoResponseDto
 from domain.file.file.entity import FileInfo
 from domain.file.file.repository import FileRepository
 from domain.ledger.category.category.repository import CategoryRepository
@@ -16,6 +17,7 @@ from domain.ledger.event.repository import EventRepository
 from domain.ledger.receipt.dto import CreateReceiptDto, SummaryType
 from domain.ledger.receipt.dto.request.delete_receipt_params import DeleteReceiptParams
 from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
+from domain.ledger.receipt.dto.request.upload_receipt_dto import UploadReceiptDto
 from domain.ledger.receipt.dto.response import SummaryData, ReceiptResponseDto
 from domain.ledger.receipt.dto.request.search_receipt_params import SearchAllReceiptParams
 from domain.ledger.receipt.dto.request.receipt_summary_params import ReceiptSummaryParams
@@ -41,6 +43,7 @@ class ReceiptService:
             member_repository: MemberRepository,
             joined_organization_repository: JoinedOrganizationRepository,
             file_repository: FileRepository,
+            redis_client: Redis,
             redis_queue:Queue,
     ):
         self.receipt_repository = receipt_repository
@@ -51,6 +54,7 @@ class ReceiptService:
         self.member_repository = member_repository
         self.joined_organization_repository = joined_organization_repository
         self.file_repository = file_repository
+        self.redis_client = redis_client
         self.redis_queue = redis_queue
 
     async def create_receipt(self, db: AsyncSession, create_receipt_dto:CreateReceiptDto) -> ReceiptResponseDto:
@@ -110,20 +114,32 @@ class ReceiptService:
 
     async def upload_excel(
             self,
-            file:UploadFile,
-            organization_id: int,
-            year: int,
+            upload_receipt_dto: UploadReceiptDto
     ):
-        _, ext = os.path.splitext(file.filename)
+        object_name= f"{FileType.EXCEL.value}/{upload_receipt_dto.organization_id}/{upload_receipt_dto.year}/{upload_receipt_dto.excel_file_name}"
 
-        temp_file_path = f"./tmp/{uuid.uuid4()}{ext}"
-        with open(temp_file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
         self.redis_queue.enqueue(
-            "common.redis.tasks.process_excel_receipt_upload",
-            temp_file_path,
+            "common.redis.redis_tasks.process_excel_receipt_upload",
+            object_name,
+            upload_receipt_dto.organization_id,
+            upload_receipt_dto.year,
+        )
+
+    async def download_excel(self, organization_id: int, year: int):
+        file_name = f"{uuid.uuid4().hex}.xlsx"
+        initial_state = {"status":"pending"}
+        await self.redis_client.set(f"file_name:{file_name}", json.dumps(initial_state), ex=600)
+        self.redis_queue.enqueue(
+            "common.redis.redis_tasks.process_excel_receipt_download",
+            file_name,
             organization_id,
-            year,
+            year
+        )
+        return FileInfoResponseDto(
+            id=0,
+            file_name=file_name,
+            url="",
+            fields={}
         )
 
 
