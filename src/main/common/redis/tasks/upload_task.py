@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 import numpy as np
@@ -9,6 +10,9 @@ import asyncio
 from datetime import date
 from common.env import settings
 from common.database import SessionLocal, TxType
+from common.redis import get_redis
+from common.redis.redis_client import RedisClient
+from domain.file.file.controller import FileType
 from domain.file.file.service import LocalStorageService, S3StorageService
 
 from domain.ledger.category.category.dto.request import CategoryCheck
@@ -29,19 +33,22 @@ from domain.member.entity import Member
 
 
 
-async def async_process_excel(file_key: str, organization_id: int, year: int):
+async def async_process_excel(file_name: str, organization_id: int, year: int):
+    await RedisClient.init()
     category_repository = CategoryRepository()
     item_repository = ItemRepository()
     event_repository = EventRepository()
     receipt_repository = ReceiptRepository()
     storage_service:Optional[StorageService] = None
+    redis= await get_redis()
     match settings.PROFILE:
         case "prod":
             storage_service = S3StorageService()
         case _:
             storage_service = LocalStorageService()
-
+    file_key = f"{FileType.EXCEL.value}/{organization_id}/{year}/{file_name}"
     print("Processing excel receipt upload")
+    result_payload = {}
     async with SessionLocal() as db:
         try:
             excel_data = None
@@ -168,11 +175,17 @@ async def async_process_excel(file_key: str, organization_id: int, year: int):
             await receipt_repository.bulk_create(db, receipts_to_create)
             await db.commit()
             print("success")
+            result_payload = {"status":"completed", "file_url":"no url"}
         except Exception as e:
             print(e)
             await db.rollback()
-            raise e
+            result_payload = {"status":"failed", "file_url":"no url"}
         finally:
+            if result_payload:
+                await redis.set(f"file_name:{file_name}", json.dumps(result_payload), ex=600)
+            channel_name = f"excel_upload:{file_name}"
+            await redis.publish(channel_name, "completed")
+            await RedisClient.close()
             await storage_service.delete_file(file_key)
 
 def process_excel_receipt_upload(file_path: str, organization_id: int, year: int):

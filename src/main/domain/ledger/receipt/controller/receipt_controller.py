@@ -59,6 +59,39 @@ async def upload_receipt_excel(
     )
     await receipt_service.upload_excel(upload_receipt_dto)
 
+@router.get("/upload/subscribe/{file_name}")
+@inject
+async def upload_receipt_subscribe(
+        request: Request,
+        file_name: str,
+        redis: Redis = Depends(Provide[Container.redis_client]),
+):
+    async def event_generator():
+        initial_result = await redis.get(f"file_name:{file_name}")
+        if initial_result:
+            data = json.loads(initial_result)
+            if data["status"] in ["completed", "failed"]:
+                yield {"event": "job_update", "data": initial_result}
+                return
+        pubsub = redis.pubsub()
+        await pubsub.subscribe(f"excel_upload:{file_name}")
+        try:
+            while True:
+                if await request.is_disconnected():
+                    await pubsub.unsubscribe(f"excel_upload:{file_name}")
+                    break
+                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                if message:
+                    final_result = await redis.get(f"file_name:{file_name}")
+                    if final_result:
+                        yield {"event": "job_update", "data": final_result}
+                        break
+                yield {"event": "ping", "data": "pong"}
+        except asyncio.CancelledError:
+            await pubsub.unsubscribe(f"excel_upload:{file_name}")
+            raise
+    return EventSourceResponse(event_generator())
+
 @router.post("/download/{organization_id}/{year}")
 @inject
 async def download_receipt_excel(
@@ -92,7 +125,7 @@ async def download_receipt_subscribe(
         if initial_result:
             data = json.loads(initial_result)
             if data["status"] in ["completed", "failed"]:
-                yield {"event": "job_update", "data": json.dumps(data)}
+                yield {"event": "job_update", "data": data}
                 return
         pubsub = redis.pubsub()
         await pubsub.subscribe(f"excel_download:{file_name}")

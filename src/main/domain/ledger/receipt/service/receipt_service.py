@@ -116,11 +116,10 @@ class ReceiptService:
             self,
             upload_receipt_dto: UploadReceiptDto
     ):
-        object_name= f"{FileType.EXCEL.value}/{upload_receipt_dto.organization_id}/{upload_receipt_dto.year}/{upload_receipt_dto.excel_file_name}"
 
         self.redis_queue.enqueue(
             "common.redis.redis_tasks.process_excel_receipt_upload",
-            object_name,
+            upload_receipt_dto.excel_file_name,
             upload_receipt_dto.organization_id,
             upload_receipt_dto.year,
         )

@@ -1,13 +1,11 @@
+from typing import Optional
 from datetime import datetime
 
-from sqlalchemy.orm import Session
 from sqlalchemy.future import select
-from sqlalchemy.sql.operators import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.organization.organization.entity import Organization
 from domain.organization.organization.dto import OrganizationRequestDto
-from typing import Optional
 
 class OrganizationRepository:
 
@@ -24,8 +22,13 @@ class OrganizationRepository:
         return organization
 
     async def find_by_id(self, db: AsyncSession, id: int) -> Optional[Organization]:
-        organization = await db.get(Organization, id)
-        return organization
+        query = (
+            select(Organization)
+            .filter(Organization.id == id)
+            .filter(Organization.deleted == False)
+        )
+        result = await db.execute(query)
+        return result.scalars().first()
 
     async def update(self, db:AsyncSession, organization:Organization, organization_request_dto:OrganizationRequestDto) -> None:
         organization.name = organization_request_dto.name
