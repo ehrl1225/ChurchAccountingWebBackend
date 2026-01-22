@@ -119,7 +119,7 @@ async def async_process_excel(file_name: str, organization_id: int, year: int):
                         year=year,
                     )
                     new_items.append(i)
-                    new_categories_set.add((item.category_name, item.tx_type, item.item_name))
+                    new_items_set.add((item.category_name, item.tx_type, item.item_name))
             for item in await item_repository.bulk_create(db, new_items):
                 item_map[(item.category.name, item.category.tx_type, item.name)] = item
 

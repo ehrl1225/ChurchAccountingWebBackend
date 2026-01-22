@@ -10,6 +10,12 @@ class BaseProfileConfig(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     REDIS_HOST: str = "localhost"
+    DB_DRIVER: str
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_HOST: str
+    DB_PORT: int
+    DB_NAME: str
 
     def get_database_url(self):
         return self.DATABASE_URL

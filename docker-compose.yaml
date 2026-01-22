@@ -19,7 +19,7 @@ services:
     
   redis:
     image: redis:7-alpine
-    container_name: "redis"
+    container_name: "redis-cache"
     ports:
       - "6379:6379"
     env_file:
@@ -29,32 +29,40 @@ services:
       - ./redis-data:/data
     restart: unless-stopped
 
-#  migrate:
-#    build: .
-#    container_name: "database_migrate"
-#    command: uv run alembic upgrade head
-#    depends_on:
-#      - postgres
-#
-#  web:
-#    build: .
-#    container_name: "church_accounting_web"
-#    ports:
-#      - "8000:8000"
-#    depends_on:
-#      - migrate
-#      - postgres
-#      - redis
-#    restart: unless-stopped
-#
-#  worker:
-#    build: .
-#    container_name: "church_accounting_worker"
-#    command: uv run src/main/common/redis/worker.py
-#    depends_on:
-#      - redis
-#    restart: unless-stopped
+  migrate:
+    build: .
+    container_name: "database_migrate"
+    command: sh -c "uv run /app/src/main/common/database/wait_for_postgres.py && uv run alembic upgrade head"
+    depends_on:
+      - postgres
 
+  web:
+    build: .
+    container_name: "church_accounting_web"
+    command: ["uv", "run", "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "src.main.main:app", "--bind", "0.0.0.0:8000", "--workers", "2", "--reload"]
+    volumes:
+      - ".:/app"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - migrate
+      - postgres
+      - redis
+    restart: unless-stopped
 
+  worker:
+    build: .
+    container_name: "church_accounting_worker"
+    command: uv run src/main/common/redis/worker.py
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  file:
+    build: ../file_server
+    volumes:
+      - "./uploads:/app/uploads"
+    container_name: "church_accounting_file"
+    restart: unless-stopped
 
   

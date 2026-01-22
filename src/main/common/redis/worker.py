@@ -8,5 +8,4 @@ if __name__ == '__main__':
     listen = ['default']
     queues = [Queue(name, connection=connection) for name in listen]
     worker = SpawnWorker(queues, connection=connection)
-
     worker.work()

@@ -125,7 +125,7 @@ async def download_receipt_subscribe(
         if initial_result:
             data = json.loads(initial_result)
             if data["status"] in ["completed", "failed"]:
-                yield {"event": "job_update", "data": data}
+                yield {"event": "job_update", "data": initial_result}
                 return
         pubsub = redis.pubsub()
         await pubsub.subscribe(f"excel_download:{file_name}")

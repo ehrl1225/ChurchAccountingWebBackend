@@ -29,8 +29,11 @@ class RefreshTokenRepository:
         return refresh_token
 
     async def find_refresh_token(self, db:AsyncSession, jti:str) -> Optional[RefreshToken]:
-        query = (select(RefreshToken)
-                 .options(joinedload(RefreshToken.member))
-                 .filter(RefreshToken.jti == jti))
+        query = (
+            select(RefreshToken)
+            .options(joinedload(RefreshToken.member))
+            .filter(RefreshToken.jti == jti)
+            .filter(RefreshToken.expires_at < datetime.now())
+        )
         result = await db.execute(query)
         return result.scalar_one_or_none()

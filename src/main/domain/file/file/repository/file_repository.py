@@ -14,6 +14,7 @@ class FileRepository:
         file_info = FileInfo(
             file_name=file_name,
             organization_id=create_file_info.organization_id,
+            year=create_file_info.year,
             uploaded_at=datetime.now(),
         )
         db.add(file_info)

@@ -1,7 +1,5 @@
 import asyncio
 
-from sqlalchemy.orm import Mapped
-
 from domain.file.file.repository import FileRepository
 from domain.ledger.category.category.dto.request import CreateCategoryDTO
 from domain.ledger.category.category.repository import CategoryRepository
@@ -18,7 +16,7 @@ from domain.organization.organization.repository import OrganizationRepository
 from domain.organization.organization_invitation.entity import StatusEnum, OrganizationInvitation
 from domain.organization.organization_invitation.repository import OrganizationInvitationRepository
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository
-from common.database import SessionLocal, MemberRole, TxType, get_db
+from common.database import SessionLocal, MemberRole, TxType
 from common.security.auth_util import hash_password
 from domain.ledger.category.category.entity import Category
 from domain.ledger.category.item.entity import Item
@@ -162,7 +160,7 @@ async def init_dev_data():
                     await receipt_repository.create_receipt(
                         db=db,
                         create_receipt_dto=CreateReceiptDto(
-                            receipt_image_url=None,
+                            receipt_image_id=None,
                             paper_date=date(year=2025, month=1, day=1),
                             actual_date=None,
                             name=f"aaa",
