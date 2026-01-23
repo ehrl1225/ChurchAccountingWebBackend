@@ -33,7 +33,7 @@ class RefreshTokenRepository:
             select(RefreshToken)
             .options(joinedload(RefreshToken.member))
             .filter(RefreshToken.jti == jti)
-            .filter(RefreshToken.expires_at < datetime.now())
+            .filter(datetime.now() < RefreshToken.expires_at)
         )
         result = await db.execute(query)
         return result.scalar_one_or_none()

@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 from domain.file.file.dto.file_info_post import FileInfoPost
 from src.main.domain.file.file.service import StorageService
 
-FILE_SERVER_URL: str = "http://church_accounting_file:8001"
+FILE_SERVER_URL: str = "http://localhost:8001"
 
 class LocalStorageService(StorageService):
 

@@ -4,12 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import MemberRole
 from common.security.member_DTO import MemberDTO
-from domain.organization.joined_organization.dto import CreateJoinedOrganizationDto
+from domain.organization.joined_organization.dto import CreateJoinedOrganizationDto, JoinedOrganizationResponse
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository
 from domain.organization.organization.repository import OrganizationRepository
-from domain.organization.organization.dto import OrganizationRequestDto
+from domain.organization.organization.dto import OrganizationRequestDto, OrganizationResponseDto
 from domain.member.entity import Member
 from domain.member.repository import MemberRepository
+from domain.organization.organization.entity import Organization
 
 
 class OrganizationService:
@@ -24,19 +25,24 @@ class OrganizationService:
         self.joined_organization_repository = joined_organization_repository
         self.member_repository = member_repository
 
-    async def create(self, db: AsyncSession, member_dto:MemberDTO, organization_request_dto:OrganizationRequestDto):
+    async def create(self, db: AsyncSession, member_dto:MemberDTO, organization_request_dto:OrganizationRequestDto) -> OrganizationResponseDto:
         if not organization_request_dto.start_year <= organization_request_dto.end_year:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Organization end year must be greater than the start year")
-        organization =  await self.organization_repository.create(db, organization_request_dto)
+        organization:Organization =  await self.organization_repository.create(db, organization_request_dto)
         member: Member = await self.member_repository.find_by_id(db, member_dto.id)
         if not member:
             raise HTTPException(status_code=400, detail="Member not found")
-        await self.joined_organization_repository.join_organization(db, CreateJoinedOrganizationDto(
+        joined_organization = await self.joined_organization_repository.join_organization(db, CreateJoinedOrganizationDto(
             organization_id=organization.id,
             member_id=member.id,
             member_role=MemberRole.OWNER,
         ))
-        return organization
+        organization_dto = OrganizationResponseDto.model_validate(organization)
+        organization_dto.my_role = MemberRole.OWNER
+        my_joined_organization = JoinedOrganizationResponse.model_validate(joined_organization)
+        my_joined_organization.member_name = member_dto.name
+        organization_dto.members = [my_joined_organization]
+        return organization_dto
 
     async def update(self, db: AsyncSession, organization_id:int, organization_request_dto:OrganizationRequestDto):
         if not organization_request_dto.start_year <= organization_request_dto.end_year:
@@ -44,7 +50,10 @@ class OrganizationService:
         organization = await self.organization_repository.find_by_id(db, organization_id)
         if not organization:
             raise HTTPException(status_code=404, detail="Organization not found")
-        await self.organization_repository.update(db, organization, organization_request_dto)
+        modified_organization = await self.organization_repository.update(db, organization, organization_request_dto)
+        organization_dto = OrganizationResponseDto.model_validate(modified_organization)
+        return organization_dto
+
 
     async def delete(self, db: AsyncSession, organization_id:int) -> None:
         organization = await self.organization_repository.find_by_id(db, organization_id)

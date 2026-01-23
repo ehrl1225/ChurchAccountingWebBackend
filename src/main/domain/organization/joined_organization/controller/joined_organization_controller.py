@@ -2,7 +2,6 @@ from typing import Annotated
 
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Request, Response, Depends, status, HTTPException
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import get_db, MemberRole

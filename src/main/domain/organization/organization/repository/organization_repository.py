@@ -37,6 +37,7 @@ class OrganizationRepository:
         organization.end_year = organization_request_dto.end_year
         await db.flush()
         await db.refresh(organization)
+        return organization
 
     async def hard_delete(self, db: AsyncSession, organization:Organization) -> None:
         await db.delete(organization)
