@@ -53,5 +53,6 @@ def set_token(member: Member, scope: Literal["access", "refresh"], response: Res
         httponly=True,
         secure=True,
         samesite="strict",
+        expires=datetime.now(timezone.utc) + token_time,
     )
     return TokenDTO(token=token, jti=jti)

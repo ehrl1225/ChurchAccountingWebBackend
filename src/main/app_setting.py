@@ -1,3 +1,4 @@
+import os.path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -71,7 +72,8 @@ app.include_router(category_item_router)
 app.include_router(event_router)
 app.include_router(receipt_router)
 app.include_router(word_router)
-
+if not os.path.exists("./static"):
+    os.mkdir("./static")
 app.mount("/static", StaticFiles(directory="./static"))
 
 container = Container()

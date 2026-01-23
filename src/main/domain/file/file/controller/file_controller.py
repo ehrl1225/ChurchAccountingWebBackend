@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Request, Response, HTTPException
 from dependency_injector.wiring import inject, Provide
 import pathlib
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 
 from common.database import get_db
 from common.database.member_role import OWNER2READ_MASK, OWNER2READ_WRITE_MASK
@@ -39,6 +40,8 @@ async def get_presigned_post_url(
     object_name = f"{file_type.value}/{create_file_info.organization_id}/{create_file_info.year}/{file_name}"
     file_info = await file_service.create_file_info(db, create_file_info, file_name)
     url = await storage_service.create_presigned_post_url(object_name)
+    if url is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Url not created")
     return FileInfoResponseDto(
         id=file_info.id,
         file_name=file_name,
@@ -66,8 +69,9 @@ async def get_presigned_get_url(
         member_role_mask=OWNER2READ_MASK,
     )
     object_name = f"/{file_type.value}/{organization_id}/{year}/{file_name}"
-    url =await storage_service.create_presigned_get_url(object_name)
-
+    url = await storage_service.create_presigned_get_url(object_name)
+    if url is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Url not created")
     return FileInfoResponseDto(
         id=0,
         file_name=file_name,

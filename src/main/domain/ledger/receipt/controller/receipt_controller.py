@@ -39,7 +39,81 @@ async def create_receipt(
         organization_id=create_receipt_dto.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK
     )
-    await receipt_service.create_receipt(db, create_receipt_dto)
+    return await receipt_service.create_receipt(db, create_receipt_dto)
+
+@router.get("/all")
+@inject
+async def get_all_receipts(
+        request: Request,
+        response: Response,
+        params: Annotated[SearchAllReceiptParams, Depends()],
+        db: AsyncSession = Depends(get_db),
+        receipt_service:ReceiptService = Depends(Provide[Container.receipt_service])
+):
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=params.organization_id,
+        member_role_mask=OWNER2READ_MASK
+    )
+    data = await receipt_service.get_all_receipts(db, params)
+    return data
+
+@router.get("/summary")
+@inject
+async def get_summary_receipts(
+        request: Request,
+        response: Response,
+        params: Annotated[ReceiptSummaryParams, Depends()],
+        db: AsyncSession = Depends(get_db),
+        receipt_service: ReceiptService = Depends(Provide[Container.receipt_service])
+):
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=params.organization_id,
+        member_role_mask=OWNER2READ_MASK
+    )
+    return await receipt_service.get_summary_receipt(db, params)
+
+@router.put("/")
+@inject
+async def update_receipt(
+        request: Request,
+        response: Response,
+        edit_receipt_dto: EditReceiptDto,
+        db: AsyncSession = Depends(get_db),
+        receipt_service: ReceiptService = Depends(Provide[Container.receipt_service])
+):
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=edit_receipt_dto.organization_id,
+        member_role_mask=OWNER2READ_WRITE_MASK
+    )
+    data = await receipt_service.update(db, edit_receipt_dto)
+    return data
+
+@router.delete("/")
+@inject
+async def delete_receipt(
+        request: Request,
+        response: Response,
+        delete_receipt_params: Annotated[DeleteReceiptParams, Depends()],
+        db: AsyncSession = Depends(get_db),
+        receipt_service: ReceiptService = Depends(Provide[Container.receipt_service])
+):
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=delete_receipt_params.organization_id,
+        member_role_mask=OWNER2READ_WRITE_MASK
+    )
+    await receipt_service.delete(db, delete_receipt_params)
 
 @router.post("/upload")
 @inject
@@ -125,7 +199,7 @@ async def download_receipt_subscribe(
         if initial_result:
             data = json.loads(initial_result)
             if data["status"] in ["completed", "failed"]:
-                yield {"event": "job_update", "data": data}
+                yield {"event": "job_update", "data": initial_result}
                 return
         pubsub = redis.pubsub()
         await pubsub.subscribe(f"excel_download:{file_name}")
@@ -145,79 +219,3 @@ async def download_receipt_subscribe(
             await pubsub.unsubscribe(f"excel_download:{file_name}")
             raise
     return EventSourceResponse(event_generator())
-
-
-
-@router.get("/all")
-@inject
-async def get_all_receipts(
-        request: Request,
-        response: Response,
-        params: Annotated[SearchAllReceiptParams, Depends()],
-        db: AsyncSession = Depends(get_db),
-        receipt_service:ReceiptService = Depends(Provide[Container.receipt_service])
-):
-    me_dto = await get_current_user_from_cookie(request, response, db)
-    await check_member_role(
-        db=db,
-        member_id=me_dto.id,
-        organization_id=params.organization_id,
-        member_role_mask=OWNER2READ_MASK
-    )
-    data = await receipt_service.get_all_receipts(db, params)
-    return data
-
-@router.get("/summary")
-@inject
-async def get_summary_receipts(
-        request: Request,
-        response: Response,
-        params: Annotated[ReceiptSummaryParams, Depends()],
-        db: AsyncSession = Depends(get_db),
-        receipt_service: ReceiptService = Depends(Provide[Container.receipt_service])
-):
-    me_dto = await get_current_user_from_cookie(request, response, db)
-    await check_member_role(
-        db=db,
-        member_id=me_dto.id,
-        organization_id=params.organization_id,
-        member_role_mask=OWNER2READ_MASK
-    )
-    return await receipt_service.get_summary_receipt(db, params)
-
-@router.put("/")
-@inject
-async def update_receipt(
-        request: Request,
-        response: Response,
-        edit_receipt_dto: EditReceiptDto,
-        db: AsyncSession = Depends(get_db),
-        receipt_service: ReceiptService = Depends(Provide[Container.receipt_service])
-):
-    me_dto = await get_current_user_from_cookie(request, response, db)
-    await check_member_role(
-        db=db,
-        member_id=me_dto.id,
-        organization_id=edit_receipt_dto.organization_id,
-        member_role_mask=OWNER2READ_WRITE_MASK
-    )
-    data = await receipt_service.update(db, edit_receipt_dto)
-    return data
-
-@router.delete("/")
-@inject
-async def delete_receipt(
-        request: Request,
-        response: Response,
-        delete_receipt_params: Annotated[DeleteReceiptParams, Depends()],
-        db: AsyncSession = Depends(get_db),
-        receipt_service: ReceiptService = Depends(Provide[Container.receipt_service])
-):
-    me_dto = await get_current_user_from_cookie(request, response, db)
-    await check_member_role(
-        db=db,
-        member_id=me_dto.id,
-        organization_id=delete_receipt_params.organization_id,
-        member_role_mask=OWNER2READ_WRITE_MASK
-    )
-    await receipt_service.delete(db, delete_receipt_params)

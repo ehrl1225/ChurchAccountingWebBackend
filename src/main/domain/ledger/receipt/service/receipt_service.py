@@ -87,6 +87,7 @@ class ReceiptService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="item is not belong to organization")
         if item.category_id != category.id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="item is not belong to category")
+        event = None
         if create_receipt_dto.event_id is not None:
             event = await self.event_repository.find_by_id(db, create_receipt_dto.event_id)
             if event is None:
@@ -107,6 +108,8 @@ class ReceiptService:
         receipt_dto.category_name = category.name
         receipt_dto.item_name = item.name
         receipt_dto.amount = abs(receipt.amount)
+        if event is not None:
+            receipt_dto.event_name = event.name
         if file_info is not None:
             receipt_dto.receipt_image_id = file_info.id
             receipt_dto.receipt_image_file_name = file_info.file_name
@@ -282,6 +285,11 @@ class ReceiptService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="amount cannot be negative")
         if edit_receipt_dto.tx_type == TxType.OUTCOME:
             edit_receipt_dto.amount = -edit_receipt_dto.amount
+        event = None
+        if edit_receipt_dto.event_id is not None:
+            event = await self.event_repository.find_by_id(db, edit_receipt_dto.event_id)
+            if event is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
         # work
         receipt = await self.receipt_repository.find_by_id_with_file(db, edit_receipt_dto.receipt_id)
@@ -298,6 +306,8 @@ class ReceiptService:
         receipt_dto = ReceiptResponseDto.model_validate(receipt)
         receipt_dto.category_name = category.name
         receipt_dto.item_name = item.name
+        if event is not None:
+            receipt_dto.event_name = event.name
         receipt_dto.amount = abs(receipt.amount)
         if file_info is not None:
             receipt_dto.receipt_image_id = file_info.id

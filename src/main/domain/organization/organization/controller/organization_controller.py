@@ -8,11 +8,11 @@ from common.dependency_injector import Container
 from common.database import get_db
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.organization.organization.service import OrganizationService
-from domain.organization.organization.dto import OrganizationRequestDto
+from domain.organization.organization.dto import OrganizationRequestDto, OrganizationResponseDto
 
 router = APIRouter(prefix="/organization", tags=["organization"])
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=OrganizationResponseDto)
 @inject
 async def create_organization(
         organization:OrganizationRequestDto,
@@ -22,7 +22,8 @@ async def create_organization(
         organization_service:OrganizationService = Depends(Provide[Container.organization_service])
 ):
     member = await get_current_user_from_cookie(request, response, db)
-    await organization_service.create(db, member, organization)
+    data = await organization_service.create(db, member, organization)
+    return data
 
 @router.put("/{organization_id}", status_code=status.HTTP_202_ACCEPTED)
 @inject
@@ -36,7 +37,8 @@ async def update_organization(
 ):
     me_dto = await get_current_user_from_cookie(request, response, db)
     await check_member_role(db, me_dto.id, organization_id, OWNER2ADMIN_MASK)
-    await organization_service.update(db, organization_id, organization)
+    data = await organization_service.update(db, organization_id, organization)
+    return data
 
 @router.delete("/{organization_id}", status_code=status.HTTP_204_NO_CONTENT)
 @inject

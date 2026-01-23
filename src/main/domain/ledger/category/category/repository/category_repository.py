@@ -51,9 +51,12 @@ class CategoryRepository:
         return result.scalar_one_or_none()
 
     async def find_all(self, db:AsyncSession, organization_id:int, year:int) -> list[Category]:
-        query = (select(Category)
-                 .filter(Category.organization_id==organization_id)
-                 .filter(Category.year==year))
+        query = (
+            select(Category)
+            .options(selectinload(Category.items))
+            .filter(Category.organization_id==organization_id)
+            .filter(Category.year==year)
+        )
         result = await db.execute(query)
         return result.scalars().all()
 
