@@ -1,9 +1,8 @@
 from fastapi import HTTPException, status
 from redis.asyncio import Redis
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.database import MemberRole
+from common.enum.member_role import MemberRole
 from common.security.member_DTO import MemberDTO
 from domain.member.entity import Member
 from domain.member.repository import MemberRepository
@@ -44,6 +43,7 @@ class JoinedOrganizationService:
             return True
         else:
             return False
+
     async def change_member_role(
             self,
             db: AsyncSession,
@@ -101,3 +101,5 @@ class JoinedOrganizationService:
         if joined_organization.organization_id != delete_joined_organization.organization_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Organization not matches")
         await self.joined_organization_repository.delete_joined_organization(db, joined_organization)
+        cache_key = f"role:member:{joined_organization.member_id}:org:{joined_organization.organization_id}"
+        await self.redis_client.delete(cache_key)

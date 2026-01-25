@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 
 from common.database import get_db
-from common.database.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
+from common.enum.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
 from common.dependency_injector import Container
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.ledger.event.dto import CreateEventDTO

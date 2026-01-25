@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from common.database import TxType
+from common.enum.tx_type import TxType
 from domain.ledger.category.item.dto import EditAllItemDto
 
 

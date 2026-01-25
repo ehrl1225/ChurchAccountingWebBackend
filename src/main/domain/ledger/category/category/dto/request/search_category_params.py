@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import Query
-from common.database import TxType
+from common.enum.tx_type import TxType
 
 
 class SearchCategoryParams:

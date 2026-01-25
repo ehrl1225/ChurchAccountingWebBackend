@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict
 from datetime import date
 
-from common.database import TxType
+from common.enum.tx_type import TxType
 
 
 class ReceiptResponseDto(BaseModel):

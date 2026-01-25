@@ -1,2 +1,3 @@
 from .upload_task import process_excel_receipt_upload
 from .download_task import process_excel_receipt_download
+from .download_images_task import process_receipt_image_download

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from common.database import MemberRole
+from common.enum.member_role import MemberRole
 
 class ChangeRoleDto(BaseModel):
     member_id: int

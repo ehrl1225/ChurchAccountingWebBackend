@@ -1,7 +1,7 @@
 from typing import Optional
 from fastapi import Query
 
-from domain.ledger.receipt.dto.summary_type import SummaryType
+from common.enum.summary_type import SummaryType
 
 
 class ReceiptSummaryParams:

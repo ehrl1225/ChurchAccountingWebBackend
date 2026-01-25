@@ -8,11 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
 from common.database import get_db, SessionLocal
-from common.database.member_role import OWNER2ADMIN_MASK
+from common.enum.member_role import OWNER2ADMIN_MASK
+from common.enum.status_enum import StatusEnum
 from common.dependency_injector import Container
 from common.redis import get_redis
 from domain.organization.organization_invitation.dto import CreateOrganizationInvitationDto
-from domain.organization.organization_invitation.entity import StatusEnum
 from domain.organization.organization_invitation.service import OrganizationInvitationService
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.organization.organization_invitation.dto import OrganizationInvitationResponseDto

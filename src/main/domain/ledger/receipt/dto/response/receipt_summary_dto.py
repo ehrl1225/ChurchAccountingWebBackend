@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from domain.ledger.receipt.dto.response.receipt_summary_category_dto import ReceiptSummaryCategoryDto
-from domain.ledger.receipt.dto.summary_type import SummaryType
+from common.enum.summary_type import SummaryType
 
 
 class ReceiptSummaryDto(BaseModel):

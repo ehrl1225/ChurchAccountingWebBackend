@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
-from common.database import TxType
+from common.enum.tx_type import TxType
 from domain.ledger.category.item.dto.response.item_response_dto import ItemResponseDto
 
 

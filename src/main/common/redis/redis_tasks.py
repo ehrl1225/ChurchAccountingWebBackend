@@ -1,1 +1,1 @@
-from .tasks import process_excel_receipt_upload, process_excel_receipt_download
+from .tasks import *

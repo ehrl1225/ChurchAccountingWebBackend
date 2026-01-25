@@ -1,6 +1,6 @@
 from typing import Optional
 
-from domain.ledger.receipt.dto import SummaryType
+from common.enum.summary_type import SummaryType
 from fastapi import Query
 
 class CreateSettlementDto:

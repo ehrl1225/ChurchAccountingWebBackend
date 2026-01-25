@@ -7,7 +7,7 @@ import io
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.database import TxType
+from common.enum.tx_type import TxType
 from domain.file.word.dto.create_settlement_dto import CreateSettlementDto
 from domain.ledger.receipt.dto import ReceiptSummaryParams, ReceiptSummaryDto, ReceiptSummaryCategoryDto, \
     ReceiptSummaryItemDto

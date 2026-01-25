@@ -9,7 +9,8 @@ import httpx
 import asyncio
 from datetime import date
 from common.env import settings
-from common.database import SessionLocal, TxType
+from common.database import SessionLocal
+from common.enum.file_type import FileType
 from common.redis import get_redis
 from common.redis.redis_client import RedisClient
 from domain.file.file.controller import FileType
@@ -183,6 +184,8 @@ async def async_process_excel(file_name: str, organization_id: int, year: int):
         finally:
             if result_payload:
                 await redis.set(f"file_name:{file_name}", json.dumps(result_payload), ex=600)
+            if excel_data is not None:
+                excel_data.close()
             channel_name = f"excel_upload:{file_name}"
             await redis.publish(channel_name, "completed")
             await RedisClient.close()

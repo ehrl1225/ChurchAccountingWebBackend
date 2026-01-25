@@ -10,7 +10,7 @@ from common.dependency_injector import Container
 from domain.file.word.dto.create_settlement_dto import CreateSettlementDto
 from domain.file.word.service import WordService
 from common.security.rq import get_current_user_from_cookie, check_member_role
-from common.database.member_role import OWNER2READ_MASK
+from common.enum.member_role import OWNER2READ_MASK
 
 router = APIRouter(prefix="/file/word", tags=["Word"])
 
