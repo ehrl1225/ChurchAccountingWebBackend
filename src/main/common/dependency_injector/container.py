@@ -117,4 +117,5 @@ class Container(containers.DeclarativeContainer):
         WordService,
         organization_repository,
         receipt_service,
+        event_repository,
     )

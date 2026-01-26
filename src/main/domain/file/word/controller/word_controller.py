@@ -30,7 +30,7 @@ async def create_word_file(
         organization_id=create_settlement_dto.organization_id,
         member_role_mask=OWNER2READ_MASK
     )
-    stream = await word_service.create_month_document(db, create_settlement_dto)
+    stream = await word_service.create_document(db, create_settlement_dto)
     headers = {
         "Content-Disposition": 'attachment; filename="report.docx"',
         "Content-Type": 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

@@ -5,6 +5,7 @@ from fastapi import HTTPException, status, UploadFile
 from redis.asyncio import Redis
 from rq import Queue
 from sqlalchemy.ext.asyncio import AsyncSession
+import datetime
 
 from common.enum.tx_type import TxType
 from domain.file.file.dto.file_info_response_dto import FileInfoResponseDto
@@ -265,6 +266,15 @@ class ReceiptService:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
             event_name = event.name
         balance = total_income + total_outcome
+        carry_amount = None
+        if receipt_summary_params.month_number is not None and receipt_summary_params.use_carry_forward:
+            if receipt_summary_params.month_number != 1:
+                carry_amount = await self.receipt_repository.find_amount_before_date(
+                    db=db,
+                    organization_id=receipt_summary_params.organization_id,
+                    year=receipt_summary_params.year,
+                    date=datetime.date(year=receipt_summary_params.year, month=receipt_summary_params.month_number, day=1),
+                )
         return ReceiptSummaryDto(
             summary_type=receipt_summary_params.summary_type,
             month_number=receipt_summary_params.month_number,
@@ -273,7 +283,8 @@ class ReceiptService:
             total_income=total_income,
             total_outcome=abs(total_outcome),
             balance=balance,
-            categories=receipt_category_dtos
+            categories=receipt_category_dtos,
+            carry_amount=carry_amount
         )
 
     async def update(self, db: AsyncSession, edit_receipt_dto: EditReceiptDto) -> ReceiptResponseDto:

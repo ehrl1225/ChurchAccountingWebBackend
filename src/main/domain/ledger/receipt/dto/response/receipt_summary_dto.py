@@ -15,3 +15,4 @@ class ReceiptSummaryDto(BaseModel):
     total_outcome: int
     balance: int
     categories: list[ReceiptSummaryCategoryDto]
+    carry_amount: Optional[int] = None
