@@ -237,9 +237,10 @@ async def download_receipt_image(
         organization_id=download_receipt_image_dto.organization_id,
         member_role_mask=OWNER2READ_MASK
     )
-    await receipt_service.download_receipt_images(db, download_receipt_image_dto)
+    data = await receipt_service.download_receipt_images(db, download_receipt_image_dto)
+    return data
 
-@router.get("download/image/subscribe/{file_name}")
+@router.get("/download/image/subscribe/{file_name}")
 @inject
 async def download_receipt_image_subscribe(
         request: Request,

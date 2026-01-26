@@ -314,7 +314,6 @@ class ReceiptService:
 
         # work
         receipt = await self.receipt_repository.find_by_id_with_file(db, edit_receipt_dto.receipt_id)
-        receipt = await self.receipt_repository.update(db, receipt, edit_receipt_dto)
         file_info = None
         if edit_receipt_dto.receipt_image_id is not None:
             file_info = await self.file_repository.find_by_id(db, edit_receipt_dto.receipt_image_id)
@@ -324,6 +323,10 @@ class ReceiptService:
                 old_file_info = receipt.file
                 await self.file_repository.update_file_info(db, old_file_info, None)
             await self.file_repository.update_file_info(db, file_info, receipt.id)
+        else:
+            if receipt.file is not None:
+                await self.file_repository.update_file_info(db, receipt.file, None)
+        receipt = await self.receipt_repository.update(db, receipt, edit_receipt_dto)
         receipt_dto = ReceiptResponseDto.model_validate(receipt)
         receipt_dto.category_name = category.name
         receipt_dto.item_name = item.name
