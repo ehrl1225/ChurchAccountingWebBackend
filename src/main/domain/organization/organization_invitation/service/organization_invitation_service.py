@@ -2,7 +2,8 @@ from fastapi import HTTPException, status
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.database.member_role import MemberRole
+from common.enum.member_role import MemberRole
+from common.enum.status_enum import StatusEnum
 from common.security.member_DTO import MemberDTO
 from domain.member.entity import Member
 from domain.member.repository import MemberRepository
@@ -12,7 +13,7 @@ from domain.organization.organization.entity import Organization
 from domain.organization.organization.repository import OrganizationRepository
 from domain.organization.organization_invitation.dto import CreateOrganizationInvitationDto, \
     OrganizationInvitationResponseDto
-from domain.organization.organization_invitation.entity import StatusEnum, OrganizationInvitation
+from domain.organization.organization_invitation.entity import OrganizationInvitation
 from domain.organization.organization_invitation.repository import OrganizationInvitationRepository
 
 

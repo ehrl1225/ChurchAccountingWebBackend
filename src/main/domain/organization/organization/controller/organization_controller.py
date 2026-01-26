@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, Request, Response, status
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from dependency_injector.wiring import inject, Provide
 
-from common.database.member_role import OWNER_ONLY_MASK, OWNER2ADMIN_MASK
+from common.enum.member_role import OWNER_ONLY_MASK, OWNER2ADMIN_MASK
 from common.dependency_injector import Container
 from common.database import get_db
 from common.security.rq import get_current_user_from_cookie, check_member_role

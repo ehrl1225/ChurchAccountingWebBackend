@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from common.database import TxType
+from common.enum.tx_type import TxType
 from domain.ledger.receipt.dto.response.receipt_summary_item_dto import ReceiptSummaryItemDto
 
 

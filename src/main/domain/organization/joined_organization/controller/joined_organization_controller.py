@@ -4,8 +4,8 @@ from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Request, Response, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.database import get_db, MemberRole
-from common.database.member_role import OWNER2ADMIN_MASK, OWNER2READ_MASK
+from common.database import get_db
+from common.enum.member_role import OWNER2ADMIN_MASK, OWNER2READ_MASK, MemberRole
 from common.dependency_injector import Container
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.organization.joined_organization.dto import ChangeRoleDto

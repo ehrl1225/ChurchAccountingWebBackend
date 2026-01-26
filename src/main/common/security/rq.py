@@ -7,7 +7,7 @@ from domain.member.entity import Member
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.database.member_role import get_member_roles
+from common.enum.member_role import get_member_roles
 from domain.member.repository import RefreshTokenRepository, MemberRepository
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository
 from domain.organization.organization.repository import OrganizationRepository
@@ -16,7 +16,7 @@ from .jwt_util import decode_token, dict_to_member, set_token
 from domain.member.entity import RefreshToken
 from .member_DTO import MemberDTO
 from common.dependency_injector import Container
-from ..database import MemberRole
+from common.enum.member_role import MemberRole
 
 REDIS_ROLE_KEY_PREFIX = "role:member:"
 REDIS_ROLE_EXPIRE_SECONDS = 60 * 60

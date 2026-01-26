@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from common.database import get_db
-from common.database.member_role import OWNER2READ_MASK, OWNER2READ_WRITE_MASK
+from common.enum.member_role import OWNER2READ_MASK, OWNER2READ_WRITE_MASK
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.file.file.controller.file_type import FileType
 from domain.file.file.dto import CreateFileInfo

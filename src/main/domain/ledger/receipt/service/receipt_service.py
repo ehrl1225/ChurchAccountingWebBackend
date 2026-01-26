@@ -6,16 +6,17 @@ from redis.asyncio import Redis
 from rq import Queue
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.database import TxType
-from common.database.file_type import FileType
+from common.enum.tx_type import TxType
 from domain.file.file.dto.file_info_response_dto import FileInfoResponseDto
 from domain.file.file.entity import FileInfo
 from domain.file.file.repository import FileRepository
 from domain.ledger.category.category.repository import CategoryRepository
 from domain.ledger.category.item.repository import ItemRepository
 from domain.ledger.event.repository import EventRepository
-from domain.ledger.receipt.dto import CreateReceiptDto, SummaryType
+from domain.ledger.receipt.dto import CreateReceiptDto
+from common.enum.summary_type import SummaryType
 from domain.ledger.receipt.dto.request.delete_receipt_params import DeleteReceiptParams
+from domain.ledger.receipt.dto.request.download_receipt_image_dto import DownloadReceiptImageDto
 from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
 from domain.ledger.receipt.dto.request.upload_receipt_dto import UploadReceiptDto
 from domain.ledger.receipt.dto.response import SummaryData, ReceiptResponseDto
@@ -136,6 +137,26 @@ class ReceiptService:
             file_name,
             organization_id,
             year
+        )
+        return FileInfoResponseDto(
+            id=0,
+            file_name=file_name,
+            url="",
+            fields={}
+        )
+
+    async def download_receipt_images(self, db:AsyncSession, download_receipt_image_dto:DownloadReceiptImageDto):
+        file_name = f"{uuid.uuid4().hex}.zip"
+        initial_state = {"status":"pending"}
+        await self.redis_client.set(f"receipt_image_zip:{file_name}", json.dumps(initial_state))
+        self.redis_queue.enqueue(
+            "common.redis.redis_tasks.process_receipt_image_download",
+            file_name,
+            download_receipt_image_dto.summary_type.value,
+            download_receipt_image_dto.organization_id,
+            download_receipt_image_dto.year,
+            download_receipt_image_dto.month,
+            download_receipt_image_dto.event_id,
         )
         return FileInfoResponseDto(
             id=0,
@@ -293,7 +314,6 @@ class ReceiptService:
 
         # work
         receipt = await self.receipt_repository.find_by_id_with_file(db, edit_receipt_dto.receipt_id)
-        receipt = await self.receipt_repository.update(db, receipt, edit_receipt_dto)
         file_info = None
         if edit_receipt_dto.receipt_image_id is not None:
             file_info = await self.file_repository.find_by_id(db, edit_receipt_dto.receipt_image_id)
@@ -303,6 +323,10 @@ class ReceiptService:
                 old_file_info = receipt.file
                 await self.file_repository.update_file_info(db, old_file_info, None)
             await self.file_repository.update_file_info(db, file_info, receipt.id)
+        else:
+            if receipt.file is not None:
+                await self.file_repository.update_file_info(db, receipt.file, None)
+        receipt = await self.receipt_repository.update(db, receipt, edit_receipt_dto)
         receipt_dto = ReceiptResponseDto.model_validate(receipt)
         receipt_dto.category_name = category.name
         receipt_dto.item_name = item.name

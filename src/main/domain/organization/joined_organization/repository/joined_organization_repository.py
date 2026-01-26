@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.database import MemberRole
+from common.enum.member_role import MemberRole
 from domain.organization.joined_organization.dto import CreateJoinedOrganizationDto
 from domain.organization.organization.entity import Organization
 from domain.member.entity import Member

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.database import get_db
-from common.database.member_role import OWNER2READ_WRITE_MASK
+from common.enum.member_role import OWNER2READ_WRITE_MASK
 from common.dependency_injector import Container
 from common.security.member_DTO import MemberDTO
 from common.security.rq import get_current_user_from_cookie, check_member_role

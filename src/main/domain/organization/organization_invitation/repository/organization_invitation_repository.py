@@ -7,7 +7,8 @@ from sqlalchemy.future import select
 
 from domain.organization.organization.entity import Organization
 from domain.member.entity import Member
-from domain.organization.organization_invitation.entity import OrganizationInvitation, StatusEnum
+from domain.organization.organization_invitation.entity import OrganizationInvitation
+from common.enum.status_enum import StatusEnum
 
 
 class OrganizationInvitationRepository:

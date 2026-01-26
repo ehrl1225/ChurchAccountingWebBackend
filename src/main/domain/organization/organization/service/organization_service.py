@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.database import MemberRole
+from common.enum.member_role import MemberRole
 from common.security.member_DTO import MemberDTO
 from domain.organization.joined_organization.dto import CreateJoinedOrganizationDto, JoinedOrganizationResponse
 from domain.organization.joined_organization.repository import JoinedOrganizationRepository

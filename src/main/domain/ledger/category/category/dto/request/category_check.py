@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from common.database import TxType
+from common.enum.tx_type import TxType
 
 
 class CategoryCheck(BaseModel):

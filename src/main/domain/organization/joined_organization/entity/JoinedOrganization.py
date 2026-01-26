@@ -1,7 +1,8 @@
 from sqlalchemy import ForeignKey, Enum, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from common.database import BaseEntity, MemberRole
+from common.database import BaseEntity
+from common.enum.member_role import MemberRole
 from datetime import datetime
 
 class JoinedOrganization(BaseEntity):

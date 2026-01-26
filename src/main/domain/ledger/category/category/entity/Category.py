@@ -1,7 +1,8 @@
 from sqlalchemy import String, Enum, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 
-from common.database import BaseEntity, TxType
+from common.database import BaseEntity
+from common.enum.tx_type import TxType
 
 class Category(BaseEntity):
     __tablename__ = "category"

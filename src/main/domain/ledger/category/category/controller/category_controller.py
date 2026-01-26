@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from common.database import get_db
 from common.dependency_injector import Container
 from common.security.rq import get_current_user_from_cookie, check_member_role
-from common.database.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
+from common.enum.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
 from domain.ledger.category.category.dto.request import CreateCategoryDTO, SearchCategoryParams, DeleteCategoryParams, \
     ImportCategoryDto, EditCategoryDto
 from domain.ledger.category.category.dto.response import EditAllDto

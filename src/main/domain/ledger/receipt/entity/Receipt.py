@@ -1,6 +1,7 @@
 from typing import Optional
 
-from common.database import BaseEntity, TxType
+from common.database import BaseEntity
+from common.enum.tx_type import TxType
 from sqlalchemy import String, Date, Enum, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import date

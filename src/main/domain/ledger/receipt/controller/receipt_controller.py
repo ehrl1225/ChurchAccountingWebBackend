@@ -9,11 +9,12 @@ from redis.asyncio import Redis
 from sse_starlette import EventSourceResponse
 
 from common.database import get_db
-from common.database.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
+from common.enum.member_role import OWNER2READ_WRITE_MASK, OWNER2READ_MASK
 from common.dependency_injector import Container
 from common.security.rq import get_current_user_from_cookie, check_member_role
 from domain.ledger.receipt.dto import CreateReceiptDto
 from domain.ledger.receipt.dto.request.delete_receipt_params import DeleteReceiptParams
+from domain.ledger.receipt.dto.request.download_receipt_image_dto import DownloadReceiptImageDto
 from domain.ledger.receipt.dto.request.edit_receipt_dto import EditReceiptDto
 from domain.ledger.receipt.dto.request.search_receipt_params import SearchAllReceiptParams
 from domain.ledger.receipt.dto.request.receipt_summary_params import ReceiptSummaryParams
@@ -115,7 +116,7 @@ async def delete_receipt(
     )
     await receipt_service.delete(db, delete_receipt_params)
 
-@router.post("/upload")
+@router.post("/upload/excel")
 @inject
 async def upload_receipt_excel(
         request: Request,
@@ -133,7 +134,7 @@ async def upload_receipt_excel(
     )
     await receipt_service.upload_excel(upload_receipt_dto)
 
-@router.get("/upload/subscribe/{file_name}")
+@router.get("/upload/excel/subscribe/{file_name}")
 @inject
 async def upload_receipt_subscribe(
         request: Request,
@@ -166,7 +167,7 @@ async def upload_receipt_subscribe(
             raise
     return EventSourceResponse(event_generator())
 
-@router.post("/download/{organization_id}/{year}")
+@router.post("/download/excel/{organization_id}/{year}")
 @inject
 async def download_receipt_excel(
         request: Request,
@@ -187,7 +188,7 @@ async def download_receipt_excel(
     return data
 
 
-@router.get("/download/subscribe/{file_name}", summary="엑셀 다운로드 작업 상태 실시간 구도게")
+@router.get("/download/excel/subscribe/{file_name}", summary="엑셀 다운로드 작업 상태 실시간 구도게")
 @inject
 async def download_receipt_subscribe(
         request: Request,
@@ -218,4 +219,57 @@ async def download_receipt_subscribe(
         except asyncio.CancelledError:
             await pubsub.unsubscribe(f"excel_download:{file_name}")
             raise
+    return EventSourceResponse(event_generator())
+
+@router.post("/download/image")
+@inject
+async def download_receipt_image(
+        request: Request,
+        response: Response,
+        download_receipt_image_dto:DownloadReceiptImageDto,
+        db: AsyncSession = Depends(get_db),
+        receipt_service:ReceiptService = Depends(Provide[Container.receipt_service])
+):
+    me_dto = await get_current_user_from_cookie(request, response, db)
+    await check_member_role(
+        db=db,
+        member_id=me_dto.id,
+        organization_id=download_receipt_image_dto.organization_id,
+        member_role_mask=OWNER2READ_MASK
+    )
+    data = await receipt_service.download_receipt_images(db, download_receipt_image_dto)
+    return data
+
+@router.get("/download/image/subscribe/{file_name}")
+@inject
+async def download_receipt_image_subscribe(
+        request: Request,
+        file_name: str,
+        redis: Redis = Depends(Provide[Container.redis_client])
+):
+    async def event_generator():
+        initial_result = await redis.get(f"receipt_image_zip:{file_name}")
+        if initial_result:
+            data = json.loads(initial_result)
+            if data["status"] in ["completed", "failed"]:
+                yield {"event": "job_update", "data":initial_result}
+                return
+        pubsub = redis.pubsub()
+        await pubsub.subscribe(f"receipt_image_download:{file_name}")
+        try:
+            while True:
+                if await request.is_disconnected():
+                    await pubsub.unsubscribe("receipt_image_download:{file_name}")
+                    break
+                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                if message:
+                    final_result = await redis.get(f"receipt_image_zip:{file_name}")
+                    if final_result:
+                        yield {"event": "job_update", "data":final_result}
+                        break
+                yield {"event": "ping", "data": "ping"}
+        except asyncio.CancelledError:
+            await pubsub.unsubscribe("receipt_image_download:{file_name}")
+            raise
+
     return EventSourceResponse(event_generator())

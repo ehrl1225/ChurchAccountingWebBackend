@@ -94,6 +94,18 @@ class ReceiptRepository:
             return []
         return [SummaryData(category=category, item=item, total_amount=total_amount) for category, item, total_amount in data]
 
+    async def find_all_by_month_with_file(self, db:AsyncSession, organization_id: int, year: int, month: int):
+        query = (
+            select(Receipt)
+            .options(joinedload(Receipt.file))
+            .filter(Receipt.organization_id == organization_id)
+            .filter(Receipt.year==year)
+            .filter(extract("month", Receipt.paper_date) == month)
+        )
+        result = await db.execute(query)
+        data = result.scalars().all()
+        return data
+
     async def find_all_amount(self, db:AsyncSession, organization_id: int, year:int) -> list[SummaryData]:
         query = (
             select(Category, Item, func.sum(Receipt.amount).label("total_amount"))
@@ -138,6 +150,17 @@ class ReceiptRepository:
         if data == [(None, None, None)]:
             return []
         return [SummaryData(category=category, item=item, total_amount=total_amount) for category, item, total_amount in data]
+
+    async def find_all_by_event_with_file(self, db:AsyncSession, organization_id: int, year: int, event_id:int) -> list[Receipt]:
+        query = (
+            select(Receipt)
+            .options(joinedload(Receipt.file))
+            .filter(Receipt.organization_id==organization_id)
+            .filter(Receipt.year==year)
+            .filter(Receipt.event_id==event_id)
+        )
+        result = await db.execute(query)
+        return result.scalars().all()
 
     async def update(self, db:AsyncSession, receipt:Receipt, edit_receipt_dto:EditReceiptDto):
         receipt.paper_date = edit_receipt_dto.paper_date

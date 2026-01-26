@@ -7,7 +7,7 @@ import asyncio
 from typing import Optional
 
 from common.database import SessionLocal
-from common.database.file_type import FileType
+from common.enum.file_type import FileType
 from common.redis.redis_client import RedisClient
 from common.redis import get_redis
 from common.env import settings
@@ -27,6 +27,7 @@ async def async_process_excel(file_name: str, organization_id: int, year: int):
             storage_service = LocalStorageService()
     print("Processing excel receipt download")
     result_payload = {}
+    excel_buffer = io.BytesIO()
     async with SessionLocal() as db:
         try:
             receipts = await receipt_repository.find_all(
@@ -48,7 +49,6 @@ async def async_process_excel(file_name: str, organization_id: int, year: int):
             ]
             df = pd.DataFrame(data)
 
-            excel_buffer = io.BytesIO()
             df.to_excel(excel_buffer, index=False)
             excel_buffer.seek(0)
 
@@ -73,6 +73,7 @@ async def async_process_excel(file_name: str, organization_id: int, year: int):
         finally:
             if result_payload:
                 await redis.set(f"file_name:{file_name}", json.dumps(result_payload), ex=600)
+            excel_buffer.close()
             channel_name = f"excel_download:{file_name}"
             await redis.publish(channel_name, "completed")
             await RedisClient.close()
