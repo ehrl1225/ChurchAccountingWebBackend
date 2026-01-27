@@ -1,5 +1,9 @@
 from docx.shared import Cm
+from fastapi import HTTPException, status
+import datetime
 
+from common.enum.summary_type import SummaryType
+from domain.ledger.event.repository import EventRepository
 from domain.organization.organization.repository import OrganizationRepository
 from .word_util import *
 from docx.enum.table import WD_TABLE_ALIGNMENT
@@ -11,6 +15,7 @@ from common.enum.tx_type import TxType
 from domain.file.word.dto.create_settlement_dto import CreateSettlementDto
 from domain.ledger.receipt.dto import ReceiptSummaryParams, ReceiptSummaryDto, ReceiptSummaryCategoryDto, \
     ReceiptSummaryItemDto
+from domain.ledger.event.entity import Event
 from domain.ledger.receipt.service import ReceiptService
 
 
@@ -19,12 +24,16 @@ class WordService:
     def __init__(
             self,
             organization_repository: OrganizationRepository,
-            receipt_service: ReceiptService
+            receipt_service: ReceiptService,
+            event_repository: EventRepository,
     ):
         self.organization_repository = organization_repository
         self.receipt_service = receipt_service
+        self.event_repository = event_repository
 
-    async def create_month_document(self,db:AsyncSession, create_settlement:CreateSettlementDto):
+    async def create_document(self, db:AsyncSession, create_settlement:CreateSettlementDto):
+        if create_settlement.summary_type == SummaryType.EVENT and create_settlement.event_id is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="event_id must not be null")
         doc:Document = docx.Document()
 
         section = doc.sections[0]
@@ -43,9 +52,28 @@ class WordService:
 
         # 데이터
 
+        event: Optional[Event] = None
+        if create_settlement.event_id is not None:
+            event = await self.event_repository.find_by_id(db, create_settlement.event_id)
+
         year = create_settlement.year
-        month = create_settlement.month_number
-        first_day, last_day = calendar.monthrange(year, month)
+        first_month, last_month = 0,0
+        first_day, last_day = 0, 0
+        if create_settlement.summary_type == SummaryType.MONTH:
+            if create_settlement.month_number is not None:
+                month = create_settlement.month_number
+                first_month, last_month = month, month
+                first_day, last_day = 1, calendar.monthrange(year, month)[1]
+            else:
+                first_month, last_month = 1, 12
+                first_day, last_day = 1, 31
+        else:
+            first_date:datetime.date = event.start_date
+            last_date:datetime.date = event.end_date
+            first_month, last_month = first_date.month, last_date.month
+            first_day, last_day = first_date.day, last_date.day
+
+
 
         organization = await self.organization_repository.find_by_id(db, create_settlement.organization_id)
         organization_name = organization.name
@@ -56,6 +84,7 @@ class WordService:
             organization_id=create_settlement.organization_id,
             year=create_settlement.year,
             event_id=create_settlement.event_id,
+            use_carry_forward=create_settlement.use_carry_forward,
         ))
         income_categories = []
         outcome_categories = []
@@ -64,6 +93,42 @@ class WordService:
         income_total = data.total_income
         outcome_total = data.total_outcome
         balance = data.balance
+
+        if create_settlement.use_carry_forward and data.carry_amount is not None:
+            carry_amount = data.carry_amount
+            balance += carry_amount
+            if carry_amount > 0:
+                carry_item = ReceiptSummaryItemDto(
+                    item_id=0,
+                    item_name="전월 이월금",
+                    amount=carry_amount,
+                )
+                carry_category = ReceiptSummaryCategoryDto(
+                    category_id=0,
+                    category_name="전월 이월금",
+                    tx_type=TxType.INCOME,
+                    amount=carry_amount,
+                    items=[carry_item],
+                )
+                income_categories.append(carry_category)
+                income_total += carry_amount
+                income_items_count += 1
+            elif carry_amount < 0:
+                carry_item = ReceiptSummaryItemDto(
+                    item_id=0,
+                    item_name="전월 이월금",
+                    amount=-carry_amount,
+                )
+                carry_category = ReceiptSummaryCategoryDto(
+                    category_id=0,
+                    category_name="전월 이월금",
+                    tx_type=TxType.OUTCOME,
+                    amount=-carry_amount,
+                    items=[carry_item],
+                )
+                outcome_categories.append(carry_category)
+                outcome_total += -carry_amount
+                outcome_items_count += 1
 
         for category in data.categories:
             if category.tx_type == TxType.INCOME:
@@ -82,11 +147,18 @@ class WordService:
         total_sum_row_index = outcome_total_row_index + 2
 
         # 작성 시작
+        if create_settlement.summary_type == SummaryType.MONTH:
+            if create_settlement.month_number is not None:
+                p1 = doc.add_paragraph(f'{year}년도 {organization_name} {month}월 결산안', style=style_1)
+                p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            else:
+                p1 = doc.add_paragraph(f'{year}년도 {organization_name} 결산안', style=style_1)
+                p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        elif create_settlement.summary_type == SummaryType.EVENT:
+            p1 = doc.add_paragraph(f'{year}년도 {organization_name} {data.event_name} 결산안', style=style_1)
+            p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-        p1 = doc.add_paragraph(f'{year}년도 {organization_name} {month}월 결산안', style=style_1)
-        p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-        p2 = doc.add_paragraph(f"({year}.{month}.{first_day} ~ {year}.{month}.{last_day})", style=style_2)
+        p2 = doc.add_paragraph(f"({year}.{first_month}.{first_day} ~ {year}.{last_month}.{last_day})", style=style_2)
         p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
         p3 = doc.add_paragraph("[단위 : 원]", style=style_2)
@@ -145,7 +217,11 @@ class WordService:
         setCellColor(income_total_sum_cell, last_cell_color)
         setCellBorder(income_total_sum_amount_cell, start=single_bold, end=single, bottom=single_bold)
 
-        setCellText(income_total_sum_cell, f"{month}월 수입", style_3, WD_ALIGN_PARAGRAPH.CENTER, WD_ALIGN_VERTICAL.CENTER)
+        if create_settlement.summary_type == SummaryType.MONTH and create_settlement.month_number is not None:
+            setCellText(income_total_sum_cell, f"{month}월 수입", style_3, WD_ALIGN_PARAGRAPH.CENTER, WD_ALIGN_VERTICAL.CENTER)
+        else:
+            setCellText(income_total_sum_cell, f"수입", style_3, WD_ALIGN_PARAGRAPH.CENTER,
+                        WD_ALIGN_VERTICAL.CENTER)
 
         setCellText(income_total_sum_amount_cell, amountToString(income_total), style_3, WD_ALIGN_PARAGRAPH.CENTER,
                     WD_ALIGN_VERTICAL.CENTER)
@@ -160,8 +236,12 @@ class WordService:
         setCellColor(outcome_total_sum_cell, last_cell_color)
         setCellBorder(outcome_total_sum_amount_cell, start=single, end=single, bottom=single_bold)
 
-        setCellText(outcome_total_sum_cell, f"{month}월 지출", style_3,
-                    WD_ALIGN_PARAGRAPH.CENTER, WD_ALIGN_VERTICAL.CENTER)
+        if create_settlement.summary_type == SummaryType.MONTH and create_settlement.month_number is not None:
+            setCellText(outcome_total_sum_cell, f"{month}월 지출", style_3,
+                        WD_ALIGN_PARAGRAPH.CENTER, WD_ALIGN_VERTICAL.CENTER)
+        else:
+            setCellText(outcome_total_sum_cell, f"지출", style_3,
+                        WD_ALIGN_PARAGRAPH.CENTER, WD_ALIGN_VERTICAL.CENTER)
 
         setCellText(outcome_total_sum_amount_cell,
                     amountToString(outcome_total),
@@ -182,11 +262,18 @@ class WordService:
         setCellColor(remain_total_sum_cell, last_cell_color)
         setCellBorder(remain_total_sum_amount_cell, start=single, end=single, bottom=single_bold)
 
-        setCellText(remain_total_sum_cell,
-                    f"{month}월 잔액",
-                    style_3,
-                    WD_ALIGN_PARAGRAPH.CENTER,
-                    WD_ALIGN_VERTICAL.CENTER)
+        if create_settlement.summary_type == SummaryType.MONTH and create_settlement.month_number is not None:
+            setCellText(remain_total_sum_cell,
+                        f"{month}월 잔액",
+                        style_3,
+                        WD_ALIGN_PARAGRAPH.CENTER,
+                        WD_ALIGN_VERTICAL.CENTER)
+        else:
+            setCellText(remain_total_sum_cell,
+                        f"잔액",
+                        style_3,
+                        WD_ALIGN_PARAGRAPH.CENTER,
+                        WD_ALIGN_VERTICAL.CENTER)
 
         setCellText(remain_total_sum_amount_cell,
                     amountToString(balance),
@@ -219,7 +306,13 @@ class WordService:
         setCellBorder(confirm_content_cell, end=single, top=single, bottom=single)
         setCellBorder(confirm_church_cell, end=single, top=single, bottom=single)
 
-        setCellText(confirm_date_cell, f"{year}-{month:02d}월", style_5, None, WD_ALIGN_VERTICAL.CENTER)
+        if create_settlement.summary_type == SummaryType.MONTH:
+            if create_settlement.month_number is not None:
+                setCellText(confirm_date_cell, f"{year}-{month:02d}월", style_5, None, WD_ALIGN_VERTICAL.CENTER)
+            else:
+                setCellText(confirm_date_cell, f"{year}년", style_5, None, WD_ALIGN_VERTICAL.CENTER)
+        elif create_settlement.summary_type == SummaryType.EVENT:
+            setCellText(confirm_date_cell, f"{year}-{data.event_name}", style_5, None, WD_ALIGN_VERTICAL.CENTER)
 
         setCellText(confirm_content_cell, "증빙내용", style_4, WD_ALIGN_PARAGRAPH.CENTER, None)
 

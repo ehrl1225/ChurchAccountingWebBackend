@@ -1,4 +1,5 @@
 from typing import Optional
+from datetime import date
 
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql.operators import and_
@@ -129,6 +130,7 @@ class ReceiptRepository:
             .filter(Receipt.organization_id==organization_id)
             .filter(Receipt.year==year)
             .filter(Receipt.event_id==event_id)
+            .group_by(Category.id, Item.id)
         )
         result = await db.execute(query)
         data = result.all()
@@ -144,6 +146,7 @@ class ReceiptRepository:
             .filter(Receipt.organization_id==organization_id)
             .filter(Receipt.year==year)
             .filter(Receipt.event_id!=None)
+            .group_by(Category.id, Item.id)
         )
         result = await db.execute(query)
         data = result.all()
@@ -161,6 +164,16 @@ class ReceiptRepository:
         )
         result = await db.execute(query)
         return result.scalars().all()
+
+    async def find_amount_before_date(self, db:AsyncSession, organization_id: int, year: int, date:date):
+        query = (
+            select(func.sum(Receipt.amount).label("total_amount"))
+            .filter(Receipt.organization_id==organization_id)
+            .filter(Receipt.year==year)
+            .filter(Receipt.paper_date < date)
+        )
+        result = await db.execute(query)
+        return result.scalar_one_or_none()
 
     async def update(self, db:AsyncSession, receipt:Receipt, edit_receipt_dto:EditReceiptDto):
         receipt.paper_date = edit_receipt_dto.paper_date
