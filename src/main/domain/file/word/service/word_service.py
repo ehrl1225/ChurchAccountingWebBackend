@@ -94,7 +94,41 @@ class WordService:
         outcome_total = data.total_outcome
         balance = data.balance
 
-
+        if create_settlement.use_carry_forward and data.carry_amount is not None:
+            carry_amount = data.carry_amount
+            balance += carry_amount
+            if carry_amount > 0:
+                carry_item = ReceiptSummaryItemDto(
+                    item_id=0,
+                    item_name="전월 이월금",
+                    amount=carry_amount,
+                )
+                carry_category = ReceiptSummaryCategoryDto(
+                    category_id=0,
+                    category_name="전월 이월금",
+                    tx_type=TxType.INCOME,
+                    amount=carry_amount,
+                    items=[carry_item],
+                )
+                income_categories.append(carry_category)
+                income_total += carry_amount
+                income_items_count += 1
+            elif carry_amount < 0:
+                carry_item = ReceiptSummaryItemDto(
+                    item_id=0,
+                    item_name="전월 이월금",
+                    amount=-carry_amount,
+                )
+                carry_category = ReceiptSummaryCategoryDto(
+                    category_id=0,
+                    category_name="전월 이월금",
+                    tx_type=TxType.OUTCOME,
+                    amount=-carry_amount,
+                    items=[carry_item],
+                )
+                outcome_categories.append(carry_category)
+                outcome_total += -carry_amount
+                outcome_items_count += 1
 
         for category in data.categories:
             if category.tx_type == TxType.INCOME:

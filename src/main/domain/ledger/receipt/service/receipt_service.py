@@ -260,6 +260,7 @@ class ReceiptService:
                     receipt_category_dtos.append(category_dto)
                 else:
                     receipt_category_dict[d.category.id].items.append(item)
+                    receipt_category_dict[d.category.id].amount += abs(d.total_amount)
         if receipt_summary_params.event_id is not None:
             event = await self.event_repository.find_by_id(db, receipt_summary_params.event_id)
             if event is None:
@@ -267,7 +268,7 @@ class ReceiptService:
             event_name = event.name
         balance = total_income + total_outcome
         carry_amount = None
-        if receipt_summary_params.month_number is not None and receipt_summary_params.use_carry_forward:
+        if receipt_summary_params.month_number is not None:
             if receipt_summary_params.month_number != 1:
                 carry_amount = await self.receipt_repository.find_amount_before_date(
                     db=db,
