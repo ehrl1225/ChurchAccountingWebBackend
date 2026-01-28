@@ -73,7 +73,7 @@ jobs:
           DOT_ENV: ${{ secrets.DOT_ENV }}
           DOT_PROD_ENV: ${{ secrets.DOT_PROD_ENV }}
         run: |
-          printf "%s" "${DOT_ENV}" > "${{ .env }}"
+          printf "%s" "${DOT_ENV}" > ".env"
           printf "%s" ""
 
       - name: Docker Buildx 설치
