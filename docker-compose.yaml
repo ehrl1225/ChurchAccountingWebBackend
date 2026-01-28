@@ -50,19 +50,4 @@ services:
       - redis
     restart: unless-stopped
 
-  worker:
-    build: .
-    container_name: "church_accounting_worker"
-    command: uv run src/main/common/redis/worker.py
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  file:
-    build: ../file_server
-    volumes:
-      - "./uploads:/app/uploads"
-    container_name: "church_accounting_file"
-    restart: unless-stopped
-
   
