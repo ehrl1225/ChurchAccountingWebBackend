@@ -14,16 +14,17 @@ concurrency:
 
 on:
   push:
-    - ".github/workflows/**"
-    - "src"
-    - "pyproject.toml"
-    - "Dockerfile"
-    - "docker-compose.yaml"
-    - "alembic"
-    - "static"
+    paths:
+      - ".github/workflows/**"
+      - "src"
+      - "pyproject.toml"
+      - "Dockerfile"
+      - "docker-compose.yaml"
+      - "alembic"
+      - "static"
 
-  branches:
-    - main
+    branches:
+      - main
 
 permissions:
   contents: write
