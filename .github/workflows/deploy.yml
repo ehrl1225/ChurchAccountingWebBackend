@@ -1,7 +1,7 @@
 name: deploy
 
 env:
-  IMAGE_REPOSITORY: ChurchAccountingWebBackend
+  IMAGE_REPOSITORY: church_accounting_web_backend
   CONTAINER_1_NAME: ChurchAccountingWebBackend_1
   CONTAINER_2_NAME: ChurchAccountingWebBackend_2
   CONTAINER_PORT: 8000
