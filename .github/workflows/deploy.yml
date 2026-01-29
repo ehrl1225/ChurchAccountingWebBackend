@@ -71,11 +71,12 @@ jobs:
       - name: .env 파일 생성
         env:
           DOT_ENV: ${{ secrets.DOT_ENV }}
-          DOT_MIGRATE: ${{ secrets.DOT_MIGRATE_ENV }}
+          DOT_MIGRATE_ENV: ${{ secrets.DOT_MIGRATE_ENV }}
           DOT_PROD_ENV: ${{ secrets.DOT_PROD_ENV }}
         run: |
           printf "%s" "${DOT_ENV}" > ".env"
-          printf "%s" ""
+          printf "%s" "${DOT_ENV}" > ".env.migrate"
+          printf "%s" "${DOT_PROD_ENV" > ".env.prod"
 
       - name: Docker Buildx 설치
         uses: docker/setup-buildx-action@v3
@@ -184,11 +185,13 @@ jobs:
             fi
             echo "role -> blue(now): ${BLUE}, green(next): ${GREEN}"
             
+            docker run --rm --network "${NET}" "${IMAGE}" sh -c "uv run /app/main/common/database/wait_for_postgres.py && uv run alembic upgrade head"
+            
             docker rm -f "${GREEN}" >/dev/null 2>&1 || true
             echo "run new container -> ${GREEN}"
             docker run -d --name "${GREEN}" \
               --restart unless-stopped \
-              --network "${NET}"
+              --network "${NET}" \
               -e TZ=Asia/Seoul \
               "${IMAGE}"
             
