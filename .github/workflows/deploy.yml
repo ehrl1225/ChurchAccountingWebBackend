@@ -76,7 +76,7 @@ jobs:
         run: |
           printf "%s" "${DOT_ENV}" > ".env"
           printf "%s" "${DOT_ENV}" > ".env.migrate"
-          printf "%s" "${DOT_PROD_ENV" > ".env.prod"
+          printf "%s" "${DOT_PROD_ENV}" > ".env.prod"
 
       - name: Docker Buildx 설치
         uses: docker/setup-buildx-action@v3
