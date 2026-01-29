@@ -54,6 +54,10 @@ async def db_session_middleware(request: Request, call_next):
 async def root():
     return {"message": "Hello World"}
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
