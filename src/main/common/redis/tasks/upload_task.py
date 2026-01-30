@@ -11,6 +11,7 @@ from datetime import date
 from common.env import settings
 from common.database import SessionLocal
 from common.enum.file_type import FileType
+from common.enum.tx_type import TxType
 from common.redis import get_redis
 from common.redis.redis_client import RedisClient
 from domain.file.file.controller import FileType
