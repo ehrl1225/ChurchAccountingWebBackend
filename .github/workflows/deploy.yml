@@ -71,12 +71,16 @@ jobs:
       - name: .env 파일 생성
         env:
           DOT_ENV: ${{ secrets.DOT_ENV }}
+          DOT_DEV_ENV: ${{ secrets.DOT_DEV_ENV }}
+          DOT_TEST_ENV: ${{ secrets.DOT_TEST_ENV }}
           DOT_MIGRATE_ENV: ${{ secrets.DOT_MIGRATE_ENV }}
           DOT_PROD_ENV: ${{ secrets.DOT_PROD_ENV }}
         run: |
           printf "%s" "${DOT_ENV}" > ".env"
-          printf "%s" "${DOT_ENV}" > ".env.migrate"
+          printf "%s" "${DOT_DEV_ENV}" > ".env.dev"
+          printf "%s" "${DOT_MIGRATE_ENV}" > ".env.migrate"
           printf "%s" "${DOT_PROD_ENV}" > ".env.prod"
+          printf "%s" "${DOT_TEST_ENV}" > ".env.test"
 
       - name: Docker Buildx 설치
         uses: docker/setup-buildx-action@v3
