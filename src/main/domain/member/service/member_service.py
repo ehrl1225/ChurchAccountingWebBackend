@@ -1,7 +1,6 @@
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.member.dto import RegisterFormDTO, LoginFormDTO
