@@ -3,7 +3,10 @@ LABEL authors="js"
 
 WORKDIR /app
 
+RUN apt update -y
+RUn apt install curl -y
 RUN pip install uv
+RUN apt-get install -y curl
 
 COPY pyproject.toml uv.lock alembic.ini .env .env.* ./
 RUN uv sync
