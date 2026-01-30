@@ -28,6 +28,8 @@ from domain.ledger.event.repository import EventRepository
 from domain.ledger.receipt.entity import Receipt
 from domain.ledger.receipt.repository import ReceiptRepository
 from domain.file.file.service import StorageService
+
+# 아래 import는 코드에서 쓰이지는 않지만 entity 간의 관계를 명시해야 하기 떄문에 있어야함
 from domain.organization.organization.entity import Organization
 from domain.organization.organization_invitation.entity import OrganizationInvitation
 from domain.organization.joined_organization.entity import JoinedOrganization
@@ -146,8 +148,13 @@ async def async_process_excel(file_name: str, organization_id: int, year: int):
                 event_map[event.name] = event
 
             for index, row in df.iterrows():
-                paper_date = row["paper_date"]
+                paper_date:date = row["paper_date"]
+                paper_date = date(year=year, month=paper_date.month, day=paper_date.day)
                 actual_date = row["actual_date"]
+                if pd.isna(actual_date):
+                    actual_date = None
+                else:
+                    actual_date = date(year=year, month=actual_date.month, day=actual_date.day)
                 name = row["name"]
                 amount = row["amount"]
                 tx_type = TxType.INCOME if amount > 0 else TxType.OUTCOME
