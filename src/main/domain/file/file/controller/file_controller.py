@@ -68,7 +68,7 @@ async def get_presigned_get_url(
         organization_id=organization_id,
         member_role_mask=OWNER2READ_MASK,
     )
-    object_name = f"/{file_type.value}/{organization_id}/{year}/{file_name}"
+    object_name = f"{file_type.value}/{organization_id}/{year}/{file_name}"
     url = await storage_service.create_presigned_get_url(object_name)
     if url is None:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Url not created")
