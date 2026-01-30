@@ -58,9 +58,14 @@ async def root():
 async def health_check():
     return {"status": "ok"}
 
+origins = [
+    "http://localhost:3000",
+    "https://www.churchaccounting.ehrl1234.store"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
