@@ -185,7 +185,7 @@ jobs:
             fi
             echo "role -> blue(now): ${BLUE}, green(next): ${GREEN}"
             
-            docker run --rm --network "${NET}" "${IMAGE}" sh -c "uv run /app/main/common/database/wait_for_postgres.py && uv run alembic upgrade head"
+            docker run --rm --network "${NET}" "${IMAGE}" sh -c "uv run /app/src/main/common/database/wait_for_postgres.py && uv run alembic upgrade head"
             
             docker rm -f "${GREEN}" >/dev/null 2>&1 || true
             echo "run new container -> ${GREEN}"
