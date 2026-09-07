@@ -61,6 +61,7 @@ async def health_check():
 origins = [
     "http://localhost:3000",
     "https://www.churchaccounting.ehrl1234.store"
+    "https://www.accounting.ehrl.site"
 ]
 
 app.add_middleware(
