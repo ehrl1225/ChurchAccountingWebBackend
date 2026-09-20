@@ -64,3 +64,12 @@ class ItemService:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="only empty receipts are allowed")
 
         await self.item_repository.delete_item(db, item)
+
+    async def move_item_receipts(self, db: AsyncSession, from_item_id:int, to_item_id:int):
+        from_item = await self.item_repository.find_by_id(db, from_item_id)
+        if from_item is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="From item not found")
+        to_item = await self.item_repository.find_by_id(db, to_item_id)
+        if to_item is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="To item not found")
+        await self.item_repository.move_item_receipts(db, from_item, to_item_id)
