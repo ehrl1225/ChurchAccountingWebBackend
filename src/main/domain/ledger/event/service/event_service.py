@@ -37,7 +37,9 @@ class EventService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="not available year")
 
         # work
-        await self.event_repository.create_event(db, create_event_dto)
+        event = await self.event_repository.create_event(db, create_event_dto)
+        event_dto = EventResponseDTO.model_validate(event)
+        return event_dto
 
     async def find_all(self, db: AsyncSession, search_event_params:SearchEventParams):
         # verify

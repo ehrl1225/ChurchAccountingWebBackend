@@ -31,7 +31,8 @@ async def create_item(
         organization_id=create_item_dto.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK,
     )
-    await item_service.create_item(db, create_item_dto)
+    item = await item_service.create_item(db, create_item_dto)
+    return item
 
 @router.put("/", status_code=status.HTTP_200_OK)
 @inject

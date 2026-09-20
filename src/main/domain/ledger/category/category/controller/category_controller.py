@@ -33,7 +33,7 @@ async def create_category(
         organization_id=create_category.organization_id,
         member_role_mask=OWNER2READ_WRITE_MASK,
     )
-    await category_service.create(db,create_category)
+    return await category_service.create(db,create_category)
 
 @router.post("/import")
 @inject

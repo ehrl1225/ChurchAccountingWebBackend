@@ -36,9 +36,10 @@ class CategoryService:
             db=db,
             create_category_dto=create_category
         )
+        category_dto = CategoryResponseDto.model_validate(category)
         if create_category.item_name is None or create_category.item_name == "":
-            return category
-        await self.item_repository.create_item(
+            return category_dto
+        item = await self.item_repository.create_item(
             db=db,
             create_item_dto=CreateItemDto(
                 category_id=category.id,
@@ -47,7 +48,9 @@ class CategoryService:
                 year=create_category.year,
             )
         )
-        return category
+        item_dto = ItemResponseDto.model_validate(item)
+        category_dto.items.append(item_dto)
+        return category_dto
 
     async def find_all(self, db: AsyncSession, search_category_dto:SearchCategoryParams):
         categories = await self.category_repository.find_all_by_tx_type(db=db, search_category_dto=search_category_dto)
