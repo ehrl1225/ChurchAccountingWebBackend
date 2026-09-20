@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, update
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +9,7 @@ from domain.ledger.category.category.entity import Category
 from domain.ledger.category.item.dto import CreateItemDto
 from domain.ledger.category.item.dto.request.item_check import ItemCheck
 from domain.ledger.category.item.entity import Item
+from domain.ledger.receipt.entity import Receipt
 
 
 class ItemRepository:
@@ -81,4 +82,13 @@ class ItemRepository:
 
     async def delete_item(self, db:AsyncSession, item:Item):
         await db.delete(item)
+        await db.flush()
+
+    async def move_item_receipts(self, db:AsyncSession, from_item:Item, to_item_id:int):
+        stmt = (
+            update(Receipt)
+            .where(Receipt.item_id == from_item.id)
+            .values(item_id = to_item_id)
+        )
+        await db.execute(stmt)
         await db.flush()

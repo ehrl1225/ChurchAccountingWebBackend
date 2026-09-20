@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.ledger.category.category.repository import CategoryRepository
-from domain.ledger.category.item.dto import CreateItemDto, DeleteItemParams
+from domain.ledger.category.item.dto import CreateItemDto, DeleteItemParams, ItemResponseDto
 from domain.ledger.category.item.dto.request.edit_item_dto import EditItemDto
 from domain.ledger.category.item.repository import ItemRepository
 from domain.ledger.receipt.entity import Receipt
@@ -32,10 +32,12 @@ class ItemService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
         if organization.id != category.organization_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Category is owned by another organization")
-        await self.item_repository.create_item(
+        item = await self.item_repository.create_item(
             db,
             create_item_dto
         )
+        item_dto = ItemResponseDto.model_validate(item)
+        return item_dto
 
     async def update_item(self, db: AsyncSession, edit_item:EditItemDto):
         item = await self.item_repository.find_by_organization_category_and_id(
@@ -62,3 +64,12 @@ class ItemService:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="only empty receipts are allowed")
 
         await self.item_repository.delete_item(db, item)
+
+    async def move_item_receipts(self, db: AsyncSession, from_item_id:int, to_item_id:int):
+        from_item = await self.item_repository.find_by_id(db, from_item_id)
+        if from_item is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="From item not found")
+        to_item = await self.item_repository.find_by_id(db, to_item_id)
+        if to_item is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="To item not found")
+        await self.item_repository.move_item_receipts(db, from_item, to_item_id)
